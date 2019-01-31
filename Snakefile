@@ -54,7 +54,7 @@ for program in ["bayescode", "SimuEvol"]:
         print("{0} version has not changed".format(program))
     else:
         print("Writing " + version_file)
-        with open(version_file, 'a') as version_append:
+        with open(version_file, 'w') as version_append:
             version_append.write(stdout)
 
 rule all:
