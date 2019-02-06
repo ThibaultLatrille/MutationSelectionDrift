@@ -10,7 +10,6 @@ Experiment*
 .idea/
 /bayescode
 /SimuEvol
-.ipynb_checkpoints/
 /notebooks
 /qsub
 *.pyc
