@@ -1,87 +1,48 @@
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import subprocess
-from csv import reader
-import os
-
-def path_without_extension(path_to_file):
-    return os.path.splitext(path_to_file)[0]
-
-def cmd_to_stdout(cmd):
-    return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-def print_c(txt):
-    print('\033[94m' + txt + '\033[0m')
-
-
-def copy_params(experiment, param_path):
-    new_path = "{0}/{1}".format(experiment, os.path.basename(param_path))
-    os.system('cp {0} {1}'.format(param_path, new_path))
-    return new_path
-
-def open_config(folder, config_file):
-    config_path = '{0}/{1}'.format(folder, config_file)
-    lock_path = path_without_extension(config_path) +  '.lock'
-    if os.path.exists(config_path):
-        diff = cmd_to_stdout('diff {0} {0}'.format(config_path, lock_path))
-        if diff != '':
-            print_c('Config file `{0}` has changed.'.format(config_path))
-            print_c(diff)
-            os.system('cp {0} {1}'.format(config_path, lock_path))
-    else:
-        os.system('cp {0} {1}'.format(config_file, config_path))
-        os.system('cp {0} {1}'.format(config_path, lock_path))
-    configfile: config_path
-
-
+from scripts.snake_helper import *
 
 configfile: 'config.yaml'
-EXPERIMENT = os.getcwd() + '/' + config['EXPERIMENT']
+EXPERIMENT = os.getcwd() + '/Experiments/' + config['EXPERIMENT']['NAME']
 if os.path.exists(EXPERIMENT):
-    print_c('Experiment {0} already exists.'.format(config['EXPERIMENT']))
+    print_c('Experiment folder {0} already exists.'.format(config['EXPERIMENT']['NAME']))
 else:
     os.mkdir(EXPERIMENT)
     print_c('Saving experiment into {0}'.format(EXPERIMENT))
 
-os.system('cp Snakefile {0}/{1}.smk'.format(EXPERIMENT, config['EXPERIMENT']))
+os.system('cp Snakefile {0}'.format(EXPERIMENT))
 
-open_config(EXPERIMENT, 'params.yaml')
+configfile: open_config(EXPERIMENT, 'config.yaml')
 
-TREE = copy_params(EXPERIMENT, config['TREE'])
-PREFERENCES = copy_params(EXPERIMENT, config['PREFERENCES'])
+TREE = copy_params(EXPERIMENT, config['SIMULATION']['TREE'])
+PREFERENCES = copy_params(EXPERIMENT, config['SIMULATION']['PREFERENCES'])
 
-open_config(EXPERIMENT, 'params.simulation.yaml')
 # Parameters for the simulation
 SIMULATION = EXPERIMENT + '/simulation'
 SIMULATION_PARAMS = '--newick ' + TREE
 SIMULATION_PARAMS += ' --preferences ' + PREFERENCES
-SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, config['SIMULATION_NUC_MATRIX'])
-SIMULATION_PARAMS += ' --correlation_matrix ' + copy_params(EXPERIMENT, config['SIMULATION_COR_MATRIX'])
-SIMULATION_PARAMS += ' --mu {0}'.format(config['SIMULATION_MUTATION_RATE'])
-SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION_ROOT_AGE'])
-SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION_GENERATION_TIME'])
-SIMULATION_PARAMS += ' --pop_size {0}'.format(config['SIMULATION_POP_SIZE'])
-SIMULATION_PARAMS += ' --sample_size {0}'.format(config['SIMULATION_SAMPLE_SIZE'])
-SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION_BETA'])
-if config['SIMULATION_LINKED_SITES']:
+SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, config['SIMULATION']['NUC_MATRIX'])
+SIMULATION_PARAMS += ' --correlation_matrix ' + copy_params(EXPERIMENT, config['SIMULATION']['COR_MATRIX'])
+SIMULATION_PARAMS += ' --mu {0}'.format(config['SIMULATION']['MUTATION_RATE'])
+SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
+SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
+SIMULATION_PARAMS += ' --pop_size {0}'.format(config['SIMULATION']['POP_SIZE'])
+SIMULATION_PARAMS += ' --sample_size {0}'.format(config['SIMULATION']['SAMPLE_SIZE'])
+SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
+if config['SIMULATION']['LINKED_SITES']:
     SIMULATION_PARAMS += ' --linked'
 
-open_config(EXPERIMENT, 'params.plot.yaml')
-PLOT_BURN_IN = config['PLOT_BURN_IN']
+PLOT_BURN_IN = config['PLOT']['BURN_IN']
 
-open_config(EXPERIMENT, 'params.inference.yaml')
 # Parameters for the inference
-assert(PLOT_BURN_IN < config['INFERENCE_POINTS'])
+assert(PLOT_BURN_IN < config['INFERENCE']['POINTS'])
 INFERENCE = EXPERIMENT + '/inference'
 INFERENCE_PARAMS = '-t ' + TREE
-# INFERENCE_PARAMS += ' -c ' + copy_params(EXPERIMENT, config['INFERENCE_PREFERENCES'])
-INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE_NCAT'])
-INFERENCE_PARAMS += ' -u {0}'.format(config['INFERENCE_POINTS'])
+if config['INFERENCE']['PREFERENCES_CLAMP']:
+    INFERENCE_PARAMS += ' -c ' + copy_params(EXPERIMENT, PREFERENCES)
+INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
+INFERENCE_PARAMS += ' -u {0}'.format(config['INFERENCE']['POINTS'])
 
-open_config(EXPERIMENT, 'config.inference.yaml')
-INFERENCE_CHAINS = config['INFERENCE_CHAINS']
-INFERENCE_POLYMORPHISM = config['INFERENCE_POLYMORPHISM']
+INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
+INFERENCE_POLYMORPHISM = config['INFERENCE_REPLICATE']['POLYMORPHISM']
 INFERENCE_POLYMORPHISM_PARAM = {True: ' -p', False: ''}
 
 if not os.path.exists('bayescode'):
@@ -103,7 +64,8 @@ for program in ['bayescode', 'SimuEvol']:
 
 rule all:
     input:
-        INFERENCE + '_plot'
+        INFERENCE + '_plot',
+        SIMULATION + '_plot'
 
 rule make_bayescode:
     output:
@@ -132,7 +94,7 @@ rule run_simulation:
         touch(SIMULATION)
     input:
         exec = rules.make_simupoly.output,
-        param_simu = EXPERIMENT + '/params.simulation.lock'
+        param_simu = EXPERIMENT + '/config.SIMULATION'
     benchmark:
         EXPERIMENT + "/benchmarks.simulation.tsv"
     log:
@@ -147,7 +109,7 @@ rule run_inference:
     input:
         exec = rules.make_bayescode.output,
         simu = rules.run_simulation.output,
-        param_infer = EXPERIMENT + '/params.inference.lock'
+        param_infer = EXPERIMENT + '/config.INFERENCE'
     params:
         poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
     benchmark:
@@ -163,31 +125,15 @@ rule plot_trace:
         plot = touch(INFERENCE + '_plot')
     input:
         infer = expand(rules.run_inference.output, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
-        param_plot = EXPERIMENT + '/params.plot.lock'
+        simu = rules.run_simulation.output,
+        param_plot = EXPERIMENT + '/config.PLOT'
     run:
-        traces = dict()
-        for filename in input.infer:
-            if os.path.exists(filename + '.trace'):
-                with open(filename + '.trace', 'r') as trace_open:
-                    trace = list(reader(trace_open, delimiter='\t'))
-                    for i, param in enumerate(trace[0]):
-                        if param not in traces:
-                            traces[param] = dict()
-                        traces[param][filename] = [float(line[i]) for line in trace[(1 + PLOT_BURN_IN):]]
+        trace_plot(input.simu, input.infer, output.plot, PLOT_BURN_IN)
 
-        for param, traces_param in traces.items():
-            my_dpi = 128
-            fig = plt.figure(figsize=(1920 / my_dpi, 1080 / my_dpi), dpi=my_dpi)
-            for name, param_trace in sorted(traces_param.items(), key=lambda x: x[0]):
-                style = "-"
-                if "False" in name:
-                    style = "--"
-                plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=name)
-            plt.xlabel('Point')
-            plt.ylabel(param)
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig('{0}_{1}.png'.format(output.plot, param), format='png')
-            plt.clf()
-            plt.close('all')
-        open(output.plot, 'a').close()
+rule plot_tree:
+    output:
+        plot = touch(SIMULATION + '_plot')
+    input:
+        simu = rules.run_simulation.output
+    run:
+        tree_plot(input.simu)

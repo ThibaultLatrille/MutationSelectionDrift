@@ -6,7 +6,7 @@
 
 *~
 .snakemake/
-Experiment*
+Experiments/
 .idea/
 /bayescode
 /SimuEvol

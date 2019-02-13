@@ -1,1 +1,23 @@
-EXPERIMENT: test
+EXPERIMENT:
+  NAME: Tree_output
+SIMULATION:
+  TREE: SimuEvol/data/trees/mammal_subtree.tre
+  PREFERENCES: SimuEvol/data/preferences/unif_500.txt
+  NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
+  COR_MATRIX: SimuEvol/data/matrices/correlation3x3_id.tsv
+  MUTATION_RATE: 5.0e-7
+  ROOT_AGE: 50e6
+  GENERATION_TIME: 40
+  POP_SIZE: 500
+  SAMPLE_SIZE: 20
+  BETA: 1.0
+  LINKED_SITES: true
+INFERENCE_REPLICATE:
+  CHAINS: [1, 2]
+  POLYMORPHISM: [false, true]
+INFERENCE:
+  NCAT: 30
+  POINTS: 1000
+  PREFERENCES_CLAMP: false
+PLOT:
+  BURN_IN: 100
