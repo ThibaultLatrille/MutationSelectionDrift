@@ -1,5 +1,4 @@
 import matplotlib
-from ete3 import Tree, TreeStyle, TextFace, faces, AttrFace, CircleFace
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -7,8 +6,6 @@ import subprocess
 from csv import reader
 import os
 import yaml
-
-args_nodes = ["population_size", "generation_time_in_year", "mutation_rate_per_generation"]
 
 
 class DictDiffer(object):
@@ -111,31 +108,6 @@ def to_float(element):
         return float(element)
     except ValueError:
         return element
-
-
-def layout(node, arg, min_arg, max_arg):
-    if arg in node.features:
-        radius = 15 * (float(getattr(node, arg)) - min_arg) / (max_arg - min_arg) + 15
-        circle = CircleFace(radius=radius, color="RoyalBlue", style="sphere")
-        circle.opacity = 0.3
-        faces.add_face_to_node(circle, node, 0, position="float")
-        for col, align in enumerate(args_nodes):
-            faces.add_face_to_node(TextFace(getattr(node, align)), node, col, position="aligned")
-
-
-def tree_plot(input_simu):
-    for arg in args_nodes:
-        t = Tree(input_simu + ".nhx")
-        ts = TreeStyle()
-        ts.show_leaf_name = True
-        ts.show_branch_length = True
-        max_arg = max([float(getattr(n, arg)) for n in t.traverse()])
-        min_arg = min([float(getattr(n, arg)) for n in t.traverse()])
-        ts.layout_fn = lambda x: layout(x, arg, min_arg, max_arg)
-        t.render("{0}.{1}.png".format(input_simu, arg), tree_style=ts)
-
-
-tree_plot("/home/thibault/PolyMutSel/Experiments/Tree_output/simulation")
 
 
 def trace_plot(input_simu, input_infer, output_plot, burn_in):

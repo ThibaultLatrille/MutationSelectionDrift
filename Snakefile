@@ -135,5 +135,5 @@ rule plot_tree:
         plot = touch(SIMULATION + '_plot')
     input:
         simu = rules.run_simulation.output
-    run:
-        tree_plot(input.simu)
+    shell:
+        'python3 scripts/plot_tree.py --tree {input.simu}.nhx'
