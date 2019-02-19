@@ -1,9 +1,4 @@
-import matplotlib
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import subprocess
-from csv import reader
 import os
 import yaml
 
@@ -66,7 +61,8 @@ def open_yaml(yaml_path):
 
 def copy_params(experiment, param_path):
     new_path = "{0}/{1}".format(experiment, os.path.basename(param_path))
-    os.system('cp {0} {1}'.format(param_path, new_path))
+    if new_path != param_path:
+        os.system('cp {0} {1}'.format(param_path, new_path))
     return new_path
 
 
@@ -92,84 +88,3 @@ def open_config(folder, config_file):
         if not os.path.exists(conf):
             os.system("touch " + conf)
     return config_path
-
-
-def open_tsv(filepath):
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as tsv_open:
-            tsv = list(reader(tsv_open, delimiter='\t'))
-        return tsv
-    else:
-        return [[]]
-
-
-def to_float(element):
-    try:
-        return float(element)
-    except ValueError:
-        return element
-
-
-def trace_plot(input_simu, input_infer, output_plot, burn_in):
-    simu_params, simu_nodes, simu_taxa, traces = dict(), dict(), dict(), dict()
-
-    for simu in input_simu:
-        params = open_tsv(simu + '.parameters.tsv')
-        for i, param in enumerate(params[0]):
-            simu_params[param] = to_float(params[1][i])
-
-        nodes = open_tsv(simu + '.nodes.tsv')
-        header = nodes[0]
-        index = {v: k for k, v in enumerate(header)}["index"]
-        for line in nodes[1:]:
-            simu_nodes[line[index]] = dict()
-            for i, value in enumerate(line):
-                simu_nodes[line[index]][header[i]] = to_float(value)
-
-        taxa = open_tsv(simu + '.tsv')
-        header = taxa[0]
-        index = {v: k for k, v in enumerate(header)}["taxon_name"]
-        for line in nodes[1:]:
-            simu_nodes[line[index]] = dict()
-            for i, value in enumerate(line):
-                simu_nodes[line[index]][header[i]] = to_float(value)
-
-    for filename in input_infer:
-        trace = open_tsv(filename + '.trace')
-        for i, param in enumerate(trace[0]):
-            if param not in traces:
-                traces[param] = dict()
-            traces[param][filename] = [float(line[i]) for line in trace[(1 + burn_in):]]
-
-    for param, traces_param in traces.items():
-        my_dpi = 128
-        fig = plt.figure(figsize=(1920 / my_dpi, 1080 / my_dpi), dpi=my_dpi)
-        for name, param_trace in sorted(traces_param.items(), key=lambda x: x[0]):
-            style = "-"
-            if "False" in name:
-                style = "--"
-            if ("BranchPopSize" in param) and (max(param_trace) > 10):
-                print("Issue with " + name + ", " + param)
-                y_values = [min(i, 10) for i in param_trace]
-                plt.plot(range(len(param_trace)), y_values, style, alpha=0.5, linewidth=1, label="!" + name)
-            else:
-                plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=name)
-
-        if param in simu_params:
-            # If it can be found in the simulation parameters
-            plt.axhline(y=simu_params[param], xmin=0.0, xmax=1.0, color='r', label="Simulation")
-
-        if param[0] == "*":
-            #  Then it's a branch
-            pass
-        if param[0] == "@":
-            #  Then it's a taxon
-            pass
-        plt.xlabel('Point')
-        plt.ylabel(param)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig('{0}_{1}.png'.format(output_plot, param), format='png')
-        plt.clf()
-        plt.close('all')
-    open(output_plot, 'a').close()

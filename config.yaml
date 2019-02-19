@@ -1,10 +1,11 @@
 EXPERIMENT:
-  NAME: Tree_output
+  NAME: ClampedProfilesIdentifiable
+  # NAME: GenerationTimeConstant
 SIMULATION:
-  TREE: SimuEvol/data/trees/mammal_subtree.tre
+  TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
   PREFERENCES: SimuEvol/data/preferences/unif_500.txt
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
-  COR_MATRIX: SimuEvol/data/matrices/correlation3x3_id.tsv
+  COR_MATRIX: SimuEvol/data/matrices/correlation3x3_population_size.tsv
   MUTATION_RATE: 5.0e-7
   ROOT_AGE: 50e6
   GENERATION_TIME: 40
@@ -16,8 +17,9 @@ INFERENCE_REPLICATE:
   CHAINS: [1, 2]
   POLYMORPHISM: [false, true]
 INFERENCE:
+  PRECISION: 12
   NCAT: 30
   POINTS: 1000
-  PREFERENCES_CLAMP: false
+  PREFERENCES_CLAMP: true
 PLOT:
   BURN_IN: 100
