@@ -46,13 +46,6 @@ INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
 INFERENCE_POLYMORPHISM = config['INFERENCE_REPLICATE']['POLYMORPHISM']
 INFERENCE_POLYMORPHISM_PARAM = {True: ' -p', False: ''}
 
-if not os.path.exists('bayescode'):
-    print_c('BayesCode directory not found, cloning the github repository.')
-    os.system('git clone https://github.com/bayesiancook/bayescode')
-if not os.path.exists('SimuEvol'):
-    print_c('SimuEvol directory not found, cloning the github repository.')
-    os.system('git clone https://github.com/ThibaultLatrille/SimuEvol')
-
 for program in ['bayescode', 'SimuEvol']:
     stdout = cmd_to_stdout('cd {0} && git log -1'.format(program))
     stdout += cmd_to_stdout('cd {0} && git diff src utils'.format(program))
@@ -63,111 +56,84 @@ for program in ['bayescode', 'SimuEvol']:
         with open(version_file, 'w') as version_append:
            version_append.write(stdout)
 
+localrules: all, plot_tree, plot_trace, plot_profiles, make_bayescode, make_simupoly
+
 rule all:
-    input:
-        SIMULATION + '_plot',
-        INFERENCE + '_plot',
-        INFERENCE + '_prefs'
+    input: SIMULATION + '_plot', INFERENCE + '_plot', INFERENCE + '_prefs'
 
 rule make_bayescode:
     output:
         dated = EXPERIMENT + '/datedmutsel',
-        read = EXPERIMENT + '/readdatedmutsel',
-    input:
-        dir = EXPERIMENT + '/bayescode.version'
-    log:
-        out = EXPERIMENT + '/bayescode.stdout',
-        err = EXPERIMENT + '/bayescode.stderr'
-    shell:
-        'cd bayescode && make clean && make 2> {log.err} 1> {log.out} && cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
+        read = EXPERIMENT + '/readdatedmutsel'
+    input: dir = EXPERIMENT + '/bayescode.version'
+    threads: 1
+    resources: mem=3, days=0, hours=1
+    log: out = EXPERIMENT + '/bayescode.stdout', err = EXPERIMENT + '/bayescode.stderr'
+    shell: 'cd bayescode && make clean && make 2> {log.err} 1> {log.out} && cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
 
 rule make_simupoly:
-    output:
-        EXPERIMENT + '/SimuPoly'
-    input:
-        dir = EXPERIMENT + '/SimuEvol.version'
-    log:
-        out = EXPERIMENT + '/SimuEvol.stdout',
-        err = EXPERIMENT + '/SimuEvol.stderr'
-    shell:
-        'cd SimuEvol && make clean && make 2> {log.err} 1> {log.out} && cp build/SimuPoly {EXPERIMENT}'
+    output: EXPERIMENT + '/SimuPoly'
+    input: dir = EXPERIMENT + '/SimuEvol.version'
+    threads: 1
+    resources: mem=3, days=0, hours=1
+    log: out = EXPERIMENT + '/SimuEvol.stdout', err = EXPERIMENT + '/SimuEvol.stderr'
+    shell: 'cd SimuEvol && make clean && make 2> {log.err} 1> {log.out} && cp build/SimuPoly {EXPERIMENT}'
 
 rule run_simulation:
-    output:
-        touch(SIMULATION)
+    output: touch(SIMULATION)
     input:
         exec = rules.make_simupoly.output,
         param_simu = EXPERIMENT + '/config.SIMULATION'
-    benchmark:
-        EXPERIMENT + "/benchmarks.simulation.tsv"
-    log:
-        out = SIMULATION + '.stdout',
-        err = SIMULATION + '.stderr'
-    shell:
-        '{input.exec} {SIMULATION_PARAMS} --output {output} 2> {log.err} 1> {log.out}'
+    threads: 1
+    resources: mem=5, days=0, hours=23
+    benchmark: EXPERIMENT + "/benchmarks.simulation.tsv"
+    log: out = SIMULATION + '.stdout', err = SIMULATION + '.stderr'
+    shell: '{input.exec} {SIMULATION_PARAMS} --output {output} 2> {log.err} 1> {log.out}'
 
 rule plot_tree:
-    output:
-        plot = touch(SIMULATION + '_plot')
-    input:
-        simu = rules.run_simulation.output
-    shell:
-        'python3 scripts/plot_tree.py --tree {input.simu}.nhx'
+    output: plot = touch(SIMULATION + '_plot')
+    input: simu = rules.run_simulation.output
+    shell: 'python3 scripts/plot_tree.py --tree {input.simu}.nhx'
 
 rule run_inference:
-    output:
-        touch(INFERENCE + '_{polymorphism}_{chain}_run')
+    output: touch(INFERENCE + '_{polymorphism}_{chain}_run')
     input:
         exec = rules.make_bayescode.output.dated,
         simu = rules.run_simulation.output,
         param_infer = EXPERIMENT + '/config.INFERENCE'
-    params:
-        poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
-    benchmark:
-        EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_run.tsv"
-    log:
-        out = INFERENCE + '_{polymorphism}_{chain}_run.stdout',
-        err = INFERENCE + '_{polymorphism}_{chain}_run.stderr'
-    shell:
-        '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
+    threads: 1
+    resources: mem=10, days=0, hours=23
+    params: poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
+    benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_run.tsv"
+    log: out = INFERENCE + '_{polymorphism}_{chain}_run.stdout', err = INFERENCE + '_{polymorphism}_{chain}_run.stderr'
+    shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
 
 rule read_profiles:
-    output:
-        INFERENCE + '_{polymorphism}_{chain}_read.siteprofiles'
+    output: INFERENCE + '_{polymorphism}_{chain}_read.siteprofiles'
     input:
         trace = rules.run_inference.output,
         exec = rules.make_bayescode.output.read,
         param_plot = EXPERIMENT + '/config.PLOT'
-    benchmark:
-        EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_read.tsv"
-    log:
-        out = INFERENCE + '_{polymorphism}_{chain}_read.stdout',
-        err = INFERENCE + '_{polymorphism}_{chain}_read.stderr'
-    shell:
-        '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
+    threads: 1
+    resources: mem=3, days=0, hours=1
+    benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_read.tsv"
+    log: out = INFERENCE + '_{polymorphism}_{chain}_read.stdout', err = INFERENCE + '_{polymorphism}_{chain}_read.stderr'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
 
 rule plot_profiles:
-    output:
-        prefs = directory(INFERENCE + '_prefs')
+    output: prefs = directory(INFERENCE + '_prefs')
     input:
         src = "scripts/plot_profiles.py",
         profiles = expand(rules.read_profiles.output, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
-    log:
-        out = INFERENCE + '_prefs.stdout',
-        err = INFERENCE + '_prefs.stderr'
-    shell:
-        'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
+    log: out = INFERENCE + '_prefs.stdout', err = INFERENCE + '_prefs.stderr'
+    shell: 'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
 
 rule plot_trace:
-    output:
-        plot = directory(INFERENCE + '_plot')
+    output: plot = directory(INFERENCE + '_plot')
     input:
         src = "scripts/plot_trace.py",
         trace = expand(rules.run_inference.output, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
         simu = rules.run_simulation.output,
         param_plot = EXPERIMENT + '/config.PLOT'
-    log:
-        out = INFERENCE + '_plot.stdout',
-        err = INFERENCE + '_plot.stderr'
-    shell:
-        'mkdir -p {output.plot} && python3 {input.src} --simu {input.simu} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
+    log: out = INFERENCE + '_plot.stdout', err = INFERENCE + '_plot.stderr'
+    shell: 'mkdir -p {output.plot} && python3 {input.src} --simu {input.simu} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'

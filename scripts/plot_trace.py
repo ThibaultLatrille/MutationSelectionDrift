@@ -11,7 +11,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 my_dpi = 128
-plot = False
+RED = "#EB6231"
+YELLOW = "#E29D26"
+BLUE = "#5D80B4"
+LIGHTGREEN = "#6ABD9B"
+GREEN = "#8FB03E"
 
 
 def tex_f(f):
@@ -64,29 +68,14 @@ def layout(node, arg, min_arg, max_arg, filename, columns):
 
 
 def plot_trace(input_simu, input_trace, output_plot, burn_in):
-    simu_params, simu_nodes, simu_taxa, traces = dict(), dict(), dict(), dict()
+    simu_params, traces = dict(), dict()
 
     params = open_tsv(input_simu + '.parameters.tsv')
     for i, param in enumerate(params[0]):
         simu_params[param] = to_float(params[1][i])
 
-    nodes = open_tsv(input_simu + '.nodes.tsv')
-    header = nodes[0]
-    index = {v: k for k, v in enumerate(header)}["index"]
-    for line in nodes[1:]:
-        simu_nodes[line[index]] = dict()
-        for i, value in enumerate(line):
-            simu_nodes[line[index]][header[i]] = to_float(value)
-
-    taxa = open_tsv(input_simu + '.tsv')
-    header = taxa[0]
-    index = {v: k for k, v in enumerate(header)}["taxon_name"]
-    for line in nodes[1:]:
-        simu_nodes[line[index]] = dict()
-        for i, value in enumerate(line):
-            simu_nodes[line[index]][header[i]] = to_float(value)
-
-    filenames = ["simulation"]
+    filenames = ["Simulation", "Watterson_Simulation", "WattersonSynonymous_Simulation", "Pairwise_Simulation",
+                 "PairwiseSynonymous_Simulation"]
     for filepath in input_trace:
         filenames.append(os.path.basename(filepath))
         trace = open_tsv(filepath + '.trace')
@@ -99,30 +88,28 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
     is_ultrametric(tree)
     for node in tree.traverse():
         rate = max(float(node.mutation_rate_per_generation) / float(node.generation_time_in_year), 1e-30)
+        node.add_feature("LogNe.Simulation", np.log(float(node.population_size)))
+        node.add_feature("LogMutRate.Simulation", np.log(rate))
         if not node.is_root():
             time = float(node.get_distance(node.up)) / simu_params["tree_max_distance_to_root_in_year"]
-            node.add_feature("Time.simulation", time)
-            node.add_feature("Length.simulation", np.log(time * rate))
-        node.add_feature("LogNe.simulation", np.log(float(node.population_size)))
-        node.add_feature("LogMutRate.simulation", np.log(rate))
+            node.add_feature("Time.Simulation", float(time))
+            node.add_feature("LogLength.Simulation", np.log(time * rate))
+            node.add_feature("dNdS.Simulation", float(node.dNdS))
         if node.is_leaf():
-            node.add_feature("LogTheta.simulation",
-                             np.log(4 * float(node.population_size) * float(node.mutation_rate_per_generation)))
-
+            node.add_feature("Theta.Simulation", 4 * float(node.population_size) * float(node.mutation_rate_per_generation))
+            node.add_feature("Theta.Watterson_Simulation", float(node.theta_watterson))
+            node.add_feature("Theta.WattersonSynonymous_Simulation", float(node.theta_watterson_syn))
+            node.add_feature("Theta.Pairwise_Simulation", float(node.theta_pairwise))
+            node.add_feature("Theta.PairwiseSynonymous_Simulation", float(node.theta_pairwise_syn))
     for param, traces_param in traces.items():
         plt.figure(figsize=(1920 / my_dpi, 1080 / my_dpi), dpi=my_dpi)
         for filename, param_trace in sorted(traces_param.items(), key=lambda x: x[0]):
             style = "-"
             if "False" in filename:
                 style = "--"
-            if ("NodePopSize" in param) and (max(param_trace) > 10):
-                print("Issue with " + filename + ", " + param)
-                y_values = [min(i, 10) for i in param_trace]
-                plt.plot(range(len(param_trace)), y_values, style, alpha=0.5, linewidth=1, label="!" + filename)
-            else:
-                plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=filename)
+            plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=filename)
 
-            if param[0] == "*" or param[0] == "@":
+            if param[0] == "*":
                 node_name = param.split("_")[-1]
 
                 if node_name != "":
@@ -132,18 +119,28 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
 
                 if "*NodePopSize" in param:
                     node.add_feature("LogNe." + filename, np.mean(param_trace))
+                    node.add_feature("LogNe_var." + filename, np.var(param_trace))
                 elif "*NodeRate" in param:
                     node.add_feature("LogMutRate." + filename, np.mean(param_trace))
+                    node.add_feature("LogMutRate_var." + filename, np.var(param_trace))
                 elif "*BranchTime" in param:
                     assert (not node.is_root())
                     node.add_feature("Time." + filename, np.mean(param_trace))
+                    node.add_feature("Time_var." + filename, np.var(param_trace))
                 elif "*BranchLength" in param:
                     assert (not node.is_root())
-                    node.add_feature("Length." + filename, np.log(np.mean(param_trace)))
+                    node.add_feature("LogLength." + filename, np.mean(np.log(param_trace)))
+                    node.add_feature("LogLength_var." + filename, np.var(np.log(param_trace)))
+                elif "*BranchdNdS" in param:
+                    assert (not node.is_root())
+                    node.add_feature("dNdS." + filename, np.mean(param_trace))
+                    node.add_feature("dNdS_var." + filename, np.var(param_trace))
                 elif "*Theta" in param:
-                    node.add_feature("LogTheta." + filename, np.log(np.mean(param_trace)))
+                    assert (not node.is_leaf())
+                    node.add_feature("Theta." + filename, np.mean(param_trace))
+                    node.add_feature("Theta_var." + filename, np.var(param_trace))
         if param.lower() in [s.lower() for s in simu_params]:
-            # If it can be found in the simulation parameters
+            # If it can be found in the Simulation parameters
             plt.axhline(y=simu_params[param], xmin=0.0, xmax=1.0, color='r', label="Simulation")
 
         plt.xlabel('Point')
@@ -154,14 +151,20 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         plt.clf()
         plt.close('all')
 
-    for arg in ["Time", "Length", "LogTheta", "LogMutRate", "LogNe"]:
+    for arg in ["Time", "Theta", "dNdS", "LogLength", "LogMutRate", "LogNe"]:
         axis_dict = dict()
+        err_dict = dict()
         for filename in filenames:
             attr = arg + "." + filename
-            axis = [float(getattr(node, attr)) for node in tree.traverse() if attr in node.features]
+            var = arg + "_var." + filename
+            axis = np.array([getattr(node, attr) for node in tree.traverse() if attr in node.features])
+            err = np.array([getattr(node, var) for node in tree.traverse() if var in node.features])
             if len(axis) > 0:
                 axis_dict[filename] = axis
-
+                if len(err) > 0:
+                    err_dict[filename] = np.sqrt(err)
+                else:
+                    err_dict[filename] = np.array([0] * len(axis))
         for filename, axis in axis_dict.items():
             max_arg, min_arg = max(axis), min(axis)
             ts = TreeStyle()
@@ -182,9 +185,9 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         if len(axis_dict) == 1:
             axs = [[axs]]
 
-        def min_max(axis):
+        def min_max(axis, err):
             eps = 0.05
-            min_axis, max_axis = min(axis), max(axis)
+            min_axis, max_axis = min(axis - err), max(axis + err)
             min_axis -= (max_axis - min_axis) * eps
             max_axis += (max_axis - min_axis) * eps
             if min_axis == max_axis:
@@ -195,22 +198,24 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
             for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
                 ax = axs[row][col]
-                ax.scatter(col_axis, row_axis, linewidth=3, label=r"${0}$ nodes".format(len(row_axis)))
+                ax.errorbar(col_axis, row_axis,
+                            xerr=err_dict[col_filename], yerr=err_dict[row_filename],
+                            fmt='o', color=BLUE, ecolor=GREEN, label=r"${0}$ nodes".format(len(row_axis)))
 
-                min_col, max_col = min_max(col_axis)
+                min_col, max_col = min_max(col_axis, err_dict[col_filename])
                 idf = np.linspace(min_col, max_col, 30)
                 if col == 0:
                     ax.set_ylabel(row_filename)
                 if row == len(axis_dict) - 1:
                     ax.set_xlabel(col_filename)
                 ax.set_xlim((min_col, max_col))
-                min_row, max_row = min_max(row_axis)
+                min_row, max_row = min_max(row_axis, err_dict[row_filename])
                 ax.set_ylim((min_row, max_row))
                 if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
                     model = sm.OLS(row_axis, sm.add_constant(col_axis))
                     results = model.fit()
                     b, a = results.params[0:2]
-                    ax.plot(idf, a * idf + b, 'r-', label=r"$y={0:.3g}x {3} {1:.3g}$ ($r^2={2:.3g})$".format(
+                    ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0:.3g}x {3} {1:.3g}$ ($r^2={2:.3g})$".format(
                         float(a), abs(float(b)), results.rsquared, "+" if float(b) > 0 else "-"))
                     ax.legend()
         plt.tight_layout()
