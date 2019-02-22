@@ -1,0 +1,10 @@
+{
+    "__default__":
+    {
+        "account": "tlatrill",
+        "partition": "normal",
+        "node": "1",
+        "stdout": "slurm.%x.%j.out",
+        "stderr": "slurm.%x.%j.err"
+    }
+}

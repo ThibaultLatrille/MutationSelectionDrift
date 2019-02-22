@@ -66,16 +66,12 @@ rule make_bayescode:
         dated = EXPERIMENT + '/datedmutsel',
         read = EXPERIMENT + '/readdatedmutsel'
     input: dir = EXPERIMENT + '/bayescode.version'
-    threads: 1
-    resources: mem=3, days=0, hours=1
     log: out = EXPERIMENT + '/bayescode.stdout', err = EXPERIMENT + '/bayescode.stderr'
     shell: 'cd bayescode && make clean && make 2> {log.err} 1> {log.out} && cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
 
 rule make_simupoly:
     output: EXPERIMENT + '/SimuPoly'
     input: dir = EXPERIMENT + '/SimuEvol.version'
-    threads: 1
-    resources: mem=3, days=0, hours=1
     log: out = EXPERIMENT + '/SimuEvol.stdout', err = EXPERIMENT + '/SimuEvol.stderr'
     shell: 'cd SimuEvol && make clean && make 2> {log.err} 1> {log.out} && cp build/SimuPoly {EXPERIMENT}'
 
@@ -84,8 +80,7 @@ rule run_simulation:
     input:
         exec = rules.make_simupoly.output,
         param_simu = EXPERIMENT + '/config.SIMULATION'
-    threads: 1
-    resources: mem=5, days=0, hours=23
+    resources: mem=5, threads=1, time="0-23:00"
     benchmark: EXPERIMENT + "/benchmarks.simulation.tsv"
     log: out = SIMULATION + '.stdout', err = SIMULATION + '.stderr'
     shell: '{input.exec} {SIMULATION_PARAMS} --output {output} 2> {log.err} 1> {log.out}'
@@ -101,8 +96,7 @@ rule run_inference:
         exec = rules.make_bayescode.output.dated,
         simu = rules.run_simulation.output,
         param_infer = EXPERIMENT + '/config.INFERENCE'
-    threads: 1
-    resources: mem=10, days=0, hours=23
+    resources: mem=5, threads=1, time="2-00:00"
     params: poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
     benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_run.tsv"
     log: out = INFERENCE + '_{polymorphism}_{chain}_run.stdout', err = INFERENCE + '_{polymorphism}_{chain}_run.stderr'
@@ -114,8 +108,7 @@ rule read_profiles:
         trace = rules.run_inference.output,
         exec = rules.make_bayescode.output.read,
         param_plot = EXPERIMENT + '/config.PLOT'
-    threads: 1
-    resources: mem=3, days=0, hours=1
+    resources: mem=5, threads=1, time="0-01:00"
     benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_read.tsv"
     log: out = INFERENCE + '_{polymorphism}_{chain}_read.stdout', err = INFERENCE + '_{polymorphism}_{chain}_read.stderr'
     shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
