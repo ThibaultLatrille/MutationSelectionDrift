@@ -4,7 +4,7 @@
         "account": "tlatrill",
         "partition": "normal",
         "node": "1",
-        "stdout": "slurm.%x.%j.out",
-        "stderr": "slurm.%x.%j.err"
+        "stdout": "/beegfs/data/tlatrill/SimuVsInfer/slurm/%x.%j.out",
+        "stderr": "/beegfs/data/tlatrill/SimuVsInfer/slurm/%x.%j.err"
     }
 }

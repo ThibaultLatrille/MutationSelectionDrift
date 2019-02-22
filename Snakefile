@@ -80,7 +80,7 @@ rule run_simulation:
     input:
         exec = rules.make_simupoly.output,
         param_simu = EXPERIMENT + '/config.SIMULATION'
-    resources: mem=5, threads=1, time="0-23:00"
+    params: time="0-23:00", mem=5, threads=1
     benchmark: EXPERIMENT + "/benchmarks.simulation.tsv"
     log: out = SIMULATION + '.stdout', err = SIMULATION + '.stderr'
     shell: '{input.exec} {SIMULATION_PARAMS} --output {output} 2> {log.err} 1> {log.out}'
@@ -96,8 +96,9 @@ rule run_inference:
         exec = rules.make_bayescode.output.dated,
         simu = rules.run_simulation.output,
         param_infer = EXPERIMENT + '/config.INFERENCE'
-    resources: mem=5, threads=1, time="2-00:00"
-    params: poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
+    params:
+        time="2-00:00", mem=5, threads=1,
+        poly = lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
     benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_run.tsv"
     log: out = INFERENCE + '_{polymorphism}_{chain}_run.stdout', err = INFERENCE + '_{polymorphism}_{chain}_run.stderr'
     shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
@@ -108,7 +109,7 @@ rule read_profiles:
         trace = rules.run_inference.output,
         exec = rules.make_bayescode.output.read,
         param_plot = EXPERIMENT + '/config.PLOT'
-    resources: mem=5, threads=1, time="0-01:00"
+    params: time="0-01:00", mem=5, threads=1
     benchmark: EXPERIMENT + "/benchmarks.inference_{polymorphism}_{chain}_read.tsv"
     log: out = INFERENCE + '_{polymorphism}_{chain}_read.stdout', err = INFERENCE + '_{polymorphism}_{chain}_read.stderr'
     shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
