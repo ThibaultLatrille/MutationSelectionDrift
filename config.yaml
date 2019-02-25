@@ -1,6 +1,5 @@
 EXPERIMENT:
-  NAME: ClampedProfilesIdentifiable
-  # NAME: GenerationTimeConstant
+  COMPILE: true
 SIMULATION:
   TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
   PREFERENCES: SimuEvol/data/preferences/unif_500.txt

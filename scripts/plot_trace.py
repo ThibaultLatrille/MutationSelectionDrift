@@ -96,7 +96,8 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             node.add_feature("LogLength.Simulation", np.log(time * rate))
             node.add_feature("dNdS.Simulation", float(node.dNdS))
         if node.is_leaf():
-            node.add_feature("Theta.Simulation", 4 * float(node.population_size) * float(node.mutation_rate_per_generation))
+            node.add_feature("Theta.Simulation",
+                             4 * float(node.population_size) * float(node.mutation_rate_per_generation))
             node.add_feature("Theta.Watterson_Simulation", float(node.theta_watterson))
             node.add_feature("Theta.WattersonSynonymous_Simulation", float(node.theta_watterson_syn))
             node.add_feature("Theta.Pairwise_Simulation", float(node.theta_pairwise))
@@ -136,7 +137,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     node.add_feature("dNdS." + filename, np.mean(param_trace))
                     node.add_feature("dNdS_var." + filename, np.var(param_trace))
                 elif "*Theta" in param:
-                    assert (not node.is_leaf())
+                    assert (node.is_leaf())
                     node.add_feature("Theta." + filename, np.mean(param_trace))
                     node.add_feature("Theta_var." + filename, np.var(param_trace))
         if param.lower() in [s.lower() for s in simu_params]:

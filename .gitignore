@@ -29,3 +29,4 @@ Experiments/
 *.bbl
 *.blg
 *.contdiff
+/Human_HBA1_orthologues.*
