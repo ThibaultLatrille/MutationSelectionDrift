@@ -17,6 +17,7 @@ def create_experiment(experiment):
         run += '--cpus-per-task={params.threads} --mem={params.mem} -t {params.time}"\n'
         w.write(run)
     os.system("chmod 755 " + run_file)
+    print('screen -dmS ' + experiment + ' bash -c "cd ' + exp_path + ' && ./snakeslurm.sh"')
 
 
 if __name__ == '__main__':

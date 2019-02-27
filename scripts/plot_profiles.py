@@ -1,26 +1,46 @@
 #!python3
 import argparse
 import os
+import dms_tools2.plot
+import subprocess
+from csv import reader
+
+cmd = "dms2_logoplot --prefs {0} --outdir {1} --name {2} --nperline {3}"
 
 
 def plot_profiles(args_input, args_infer, args_output):
     nperline = 53
+    header = "site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y\n"
+
+    input_prefs = args_input.replace(".txt", ".prefs")
+    input_csv = reader(open(args_input, 'r'), delimiter=' ')
+    next(input_csv)
+    with open(input_prefs, 'w') as w:
+        w.write(header)
+        for line in input_csv:
+            w.write(line[0] + "," + ",".join(line[3:]) + "\n")
+
+    name = os.path.basename(input_prefs).replace(".prefs", "").replace("_", "-")
+    subprocess.call(cmd.format(input_prefs, args_output, name, nperline), shell=True)
+    prefsfiles = [input_prefs]
+    names = [name]
 
     for profile in args_infer:
         prefs = args_output + "/" + os.path.basename(profile).replace(".siteprofiles", ".prefs")
-        with open(profile, 'r') as r:
-            with open(prefs, 'w') as w:
-                r.readline()
-                w.write("# POSITION WT SITE_ENTROPY PI_A PI_C PI_D PI_E PI_F PI_G PI_H PI_I PI_K PI_L PI_M PI_N PI_P PI_Q PI_R PI_S PI_T PI_V PI_W PI_Y\n")
-                for line in r:
-                    line_split = line.replace('\n', '').split('\t')
-                    w.write(line_split[0] + " A 1.0 " + " ".join(line_split[1:]) + "\n")
+        name = os.path.basename(prefs).replace(".prefs", "").replace("_", "-")
+        r = reader(open(profile, 'r'), delimiter='\t')
+        next(r)
+        with open(prefs, 'w') as w:
+            w.write(header)
+            for line in r:
+                w.write(",".join(line) + "\n")
 
-        os.system("dms_logoplot {0} {0}.pdf --nperline {1}".format(prefs, nperline))
-        diff_file = prefs + ".diff"
-        os.system("dms_merge {0} sum {1} --minus {2}".format(diff_file, prefs, args_input))
-        os.system("dms_logoplot {0} {0}.pdf --nperline {1}".format(diff_file, nperline))
-        os.system('dms_correlate {1} {0} {0}.corr --name1 "Initial" --name2 "Estimated"'.format(prefs, args_input))
+        prefsfiles.append(prefs)
+        names.append(name)
+        subprocess.call(cmd.format(input_prefs, args_output, name, nperline), shell=True)
+
+    plotfile = os.path.join(args_output, 'correlation.pdf')
+    dms_tools2.plot.plotCorrMatrix(names, prefsfiles, plotfile, datatype='prefs')
 
 
 if __name__ == '__main__':

@@ -2,5 +2,5 @@
 for EXPERIMENT in ./Experiments/*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
-  screen -dmS ${NAME} "cd ${EXPERIMENT} && ./snakeslurm.sh"
+  screen -dmS ${NAME} bash -c "cd ${EXPERIMENT} && ./snakeslurm.sh"
 done
