@@ -2,16 +2,16 @@ EXPERIMENT:
   COMPILE: true
 SIMULATION:
   TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
-  PREFERENCES: SimuEvol/data/preferences/unif_500.txt
+  PREFERENCES: SimuEvol/data/preferences/unif_5000.txt
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
   COR_MATRIX: SimuEvol/data/matrices/correlation3x3_population_size.tsv
-  MUTATION_RATE: 5.0e-7
-  ROOT_AGE: 50e6
-  GENERATION_TIME: 40
+  MUTATION_RATE: 5.0e-8
+  ROOT_AGE: 300e6
+  GENERATION_TIME: 10
   POP_SIZE: 500
   SAMPLE_SIZE: 20
   BETA: 1.0
-  LINKED_SITES: true
+  EXON_SIZE: 100
 INFERENCE_REPLICATE:
   CHAINS: [1, 2]
   POLYMORPHISM: [false, true]

@@ -109,8 +109,7 @@ SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENER
 SIMULATION_PARAMS += ' --pop_size {0}'.format(config['SIMULATION']['POP_SIZE'])
 SIMULATION_PARAMS += ' --sample_size {0}'.format(config['SIMULATION']['SAMPLE_SIZE'])
 SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
-if config['SIMULATION']['LINKED_SITES']:
-    SIMULATION_PARAMS += ' --linked'
+SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE'])
 
 PLOT_BURN_IN = config['PLOT']['BURN_IN']
 
@@ -153,17 +152,17 @@ rule make_bayescode:
           dated=EXPERIMENT + '/datedmutsel',
           read=EXPERIMENT + '/readdatedmutsel'
     input: dir=EXPERIMENT + '/bayescode.version'
-    params: compile=" make clean && make 2> {log.err} 1> {log.out} &&" if COMPILE else ""
+    params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/bayescode.stdout', err=EXPERIMENT + '/bayescode.stderr'
     shell:
-         'cd {ROOT}/bayescode &&{params.compile} cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
+         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out} && cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
 
 rule make_simupoly:
     output: EXPERIMENT + '/SimuPoly'
     input: dir=EXPERIMENT + '/SimuEvol.version'
-    params: compile=" make clean && make 2> {log.err} 1> {log.out} &&" if COMPILE else ""
+    params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/SimuEvol.stdout', err=EXPERIMENT + '/SimuEvol.stderr'
-    shell: 'cd {ROOT}/SimuEvol &&{params.compile} cp build/SimuPoly {EXPERIMENT}'
+    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuPoly {EXPERIMENT}'
 
 rule run_simulation:
     output: touch(SIMULATION)
