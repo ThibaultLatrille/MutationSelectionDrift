@@ -1,88 +1,23 @@
 #!python3
+
+from plot_module import *
 import argparse
 import os
-from csv import reader
-from ete3 import Tree, TreeStyle, TextFace, faces, CircleFace
-import numpy as np
-import statsmodels.api as sm
-import matplotlib
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-my_dpi = 128
-RED = "#EB6231"
-YELLOW = "#E29D26"
-BLUE = "#5D80B4"
-LIGHTGREEN = "#6ABD9B"
-GREEN = "#8FB03E"
-
-
-def tex_f(f):
-    if 1 <= f < 10:
-        return "{0:.2g}".format(f)
-    else:
-        return "{0:.2e}".format(f)
-
-
-def to_float(element):
-    try:
-        return float(element)
-    except ValueError:
-        return element
-
-
-def open_tsv(filepath):
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as tsv_open:
-            tsv = list(reader(tsv_open, delimiter='\t'))
-        return tsv
-    else:
-        return [[]]
-
-
-def is_ultrametric(tree):
-    d = [tree.get_distance(leaf) for leaf in tree.iter_leaves()]
-    if abs(max(d) - min(d)) / max(d) < 1e-4:
-        print("The tree is ultrametric.")
-        return True
-    else:
-        print("The tree is not ultrametric.")
-        print("Max distance from root to leaves: {0}.".format(max(d)))
-        print("Min distance from root to leaves: {0}.".format(min(d)))
-        return False
-
-
-def layout(node, arg, min_arg, max_arg, filename, columns):
-    if arg + "." + filename in node.features:
-        if min_arg == max_arg:
-            radius = 15
-        else:
-            radius = 15 * (float(getattr(node, arg + "." + filename)) - min_arg) / (max_arg - min_arg) + 5
-        circle = CircleFace(radius=radius, color="RoyalBlue", style="sphere")
-        circle.opacity = 0.3
-        faces.add_face_to_node(circle, node, 0, position="float")
-        for col, attr in enumerate(columns):
-            faces.add_face_to_node(TextFace(tex_f(float(getattr(node, arg + "." + attr))) + " "), node, col,
-                                   position="aligned")
 
 
 def plot_trace(input_simu, input_trace, output_plot, burn_in):
-    simu_params, traces = dict(), dict()
+    traces = dict()
 
-    params = open_tsv(input_simu + '.parameters.tsv')
-    for i, param in enumerate(params[0]):
-        simu_params[param] = to_float(params[1][i])
+    simu_params = {k: v[0] for k, v in pd.read_csv(input_simu + '.parameters.tsv', sep='\t').items()}
 
     filenames = ["Simulation", "Watterson_Simulation", "WattersonSynonymous_Simulation", "Pairwise_Simulation",
                  "PairwiseSynonymous_Simulation"]
     for filepath in input_trace:
         filenames.append(os.path.basename(filepath))
-        trace = open_tsv(filepath + '.trace')
-        for i, param in enumerate(trace[0]):
+        for param, vals in pd.read_csv(filepath + '.trace', sep='\t').items():
             if param not in traces:
                 traces[param] = dict()
-            traces[param][os.path.basename(filepath)] = [float(line[i]) for line in trace[(1 + burn_in):]]
+            traces[param][os.path.basename(filepath)] = vals[burn_in:]
 
     tree = Tree(input_simu + ".nhx", format=3)
     is_ultrametric(tree)
@@ -164,15 +99,14 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                 axis_dict[filename] = axis
                 if len(err) > 0:
                     err_dict[filename] = np.sqrt(err)
-                else:
-                    err_dict[filename] = np.array([0] * len(axis))
+
         for filename, axis in axis_dict.items():
             max_arg, min_arg = max(axis), min(axis)
             ts = TreeStyle()
             ts.show_leaf_name = True
             ts.complete_branch_lines_when_necessary = False
             columns = sorted(axis_dict)
-            ts.layout_fn = lambda x: layout(x, arg, min_arg, max_arg, filename, columns)
+            ts.layout_fn = lambda x: mutiple_layout(x, arg, min_arg, max_arg, filename, columns)
             for col, name in enumerate(columns):
                 nameF = TextFace(name, fsize=7)
                 nameF.rotation = -90
@@ -180,49 +114,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             ts.title.add_face(TextFace("{1} in {2}".format(output_plot, arg, filename), fsize=20), column=0)
             tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts)
 
-        f, axs = plt.subplots(len(axis_dict), len(axis_dict),
-                              figsize=(len(axis_dict) * 640 / my_dpi, len(axis_dict) * 480 / my_dpi), dpi=my_dpi)
-
-        if len(axis_dict) == 1:
-            axs = [[axs]]
-
-        def min_max(axis, err):
-            eps = 0.05
-            min_axis, max_axis = min(axis - err), max(axis + err)
-            min_axis -= (max_axis - min_axis) * eps
-            max_axis += (max_axis - min_axis) * eps
-            if min_axis == max_axis:
-                return min_axis - eps, max_axis + eps
-            else:
-                return min_axis, max_axis
-
-        for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
-            for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
-                ax = axs[row][col]
-                ax.errorbar(col_axis, row_axis,
-                            xerr=err_dict[col_filename], yerr=err_dict[row_filename],
-                            fmt='o', color=BLUE, ecolor=GREEN, label=r"${0}$ nodes".format(len(row_axis)))
-
-                min_col, max_col = min_max(col_axis, err_dict[col_filename])
-                idf = np.linspace(min_col, max_col, 30)
-                if col == 0:
-                    ax.set_ylabel(row_filename)
-                if row == len(axis_dict) - 1:
-                    ax.set_xlabel(col_filename)
-                ax.set_xlim((min_col, max_col))
-                min_row, max_row = min_max(row_axis, err_dict[row_filename])
-                ax.set_ylim((min_row, max_row))
-                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                    model = sm.OLS(row_axis, sm.add_constant(col_axis))
-                    results = model.fit()
-                    b, a = results.params[0:2]
-                    ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0:.3g}x {3} {1:.3g}$ ($r^2={2:.3g})$".format(
-                        float(a), abs(float(b)), results.rsquared, "+" if float(b) > 0 else "-"))
-                    ax.legend()
-        plt.tight_layout()
-        plt.savefig('{0}/correlation.{1}.png'.format(output_plot, arg), format='png')
-        plt.clf()
-        plt.close('all')
+        plot_correlation('{0}/correlation.{1}.png'.format(output_plot, arg), axis_dict, err_dict)
 
 
 if __name__ == '__main__':
