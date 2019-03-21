@@ -16,6 +16,14 @@ LIGHTGREEN = "#6ABD9B"
 GREEN = "#8FB03E"
 
 
+def convertible_to_float(f):
+    try:
+        float(f)
+        return True
+    except ValueError:
+        return False
+
+
 def tex_f(f):
     if 0.1 < f < 100:
         return "{0:.2g}".format(f)
@@ -27,7 +35,7 @@ def layout_circle(node, arg, min_arg, max_arg):
     if min_arg == max_arg:
         radius = 15
     else:
-        radius = 15 * (getattr(node, arg) - min_arg) / (max_arg - min_arg) + 5
+        radius = 15 * (float(getattr(node, arg)) - min_arg) / (max_arg - min_arg) + 5
     circle = CircleFace(radius=radius, color="RoyalBlue", style="sphere")
     circle.opacity = 0.3
     faces.add_face_to_node(circle, node, 0, position="float")
@@ -36,7 +44,7 @@ def layout_circle(node, arg, min_arg, max_arg):
 def layout(node, arg, min_arg, max_arg):
     if arg in node.features:
         layout_circle(node, arg, min_arg, max_arg)
-        faces.add_face_to_node(TextFace(tex_f(getattr(node, arg)) + " "), node, 0, position="aligned")
+        faces.add_face_to_node(TextFace(tex_f(float(getattr(node, arg))) + " "), node, 0, position="aligned")
 
 
 def mutiple_layout(node, arg, min_arg, max_arg, filename, columns):

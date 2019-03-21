@@ -8,17 +8,9 @@ from csv import reader
 cmd = "dms2_logoplot --prefs {0} --outdir {1} --name {2} --nperline {3}"
 
 
-def plot_profiles(args_input, args_infer, args_output):
+def plot_profiles(input_prefs, args_infer, args_output):
     nperline = 53
     header = "site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y\n"
-
-    input_prefs = args_input.replace(".txt", ".prefs")
-    input_csv = reader(open(args_input, 'r'), delimiter=' ')
-    next(input_csv)
-    with open(input_prefs, 'w') as w:
-        w.write(header)
-        for line in input_csv:
-            w.write(line[0] + "," + ",".join(line[3:]) + "\n")
 
     name = os.path.basename(input_prefs).replace(".prefs", "").replace("_", "-")
     subprocess.call(cmd.format(input_prefs, args_output, name, nperline), shell=True)
