@@ -107,6 +107,8 @@ SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
 SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
 SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
 SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE'])
+if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
+    SIMULATION_PARAMS += ' --branch_wise_correlation'
 
 SIMUPOLY_PARAMS = '--pop_size {0}'.format(config['SimuPoly']['POP_SIZE'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
