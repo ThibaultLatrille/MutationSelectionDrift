@@ -4,8 +4,8 @@ SIMULATION:
   TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
   PREFERENCES: SimuEvol/data/preferences/gal4_5000_30.prefs
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
-  COR_MATRIX: SimuEvol/data/matrices/correlation3x3_zero.tsv
-  MUTATION_RATE: 1.5e-8
+  COR_MATRIX: SimuEvol/data/matrices/correlation3x3.tsv
+  MUTATION_RATE: 1.0e-8
   ROOT_AGE: 300e6
   GENERATION_TIME: 10
   BETA: 1.0

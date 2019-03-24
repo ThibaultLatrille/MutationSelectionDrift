@@ -1,6 +1,7 @@
 #!python3
 import argparse
 import os
+from subprocess import run
 
 
 def create_experiment(experiment):
@@ -12,12 +13,17 @@ def create_experiment(experiment):
     run_file = exp_path + "/snakeslurm.sh"
     with open(run_file, 'w') as w:
         w.write("#!/usr/bin/env bash\n")
-        run = 'snakemake -j 99 --cluster "sbatch -J {0} -p normal -N 1 ' \
-              '-o {1}/slurm.%x.%j.out -e {1}/slurm.%x.%j.err '.format(experiment, exp_path)
-        run += '--cpus-per-task={params.threads} --mem={params.mem} -t {params.time}"\n'
-        w.write(run)
+        run_str = 'snakemake -j 99 --cluster "sbatch -J {0} -p normal -N 1 ' \
+                  '-o {1}/slurm.%x.%j.out -e {1}/slurm.%x.%j.err '.format(experiment, exp_path)
+        run_str += '--cpus-per-task={params.threads} --mem={params.mem} -t {params.time}"\n'
+        w.write(run_str)
     os.system("chmod 755 " + run_file)
-    print('screen -dmS ' + experiment + ' bash -c "cd ' + exp_path + ' && ./snakeslurm.sh"')
+    screen = 'screen -dmS ' + experiment + ' bash -c "cd ' + exp_path + ' && ./snakeslurm.sh"'
+    with open(exp_path + "/screen.sh", 'w') as w:
+        w.write("#!/usr/bin/env bash\n")
+        w.write(screen)
+    print(screen)
+    run(screen, shell=True)
 
 
 if __name__ == '__main__':

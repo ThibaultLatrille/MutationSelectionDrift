@@ -169,13 +169,13 @@ rule all:
 
 rule make_bayescode:
     output:
-          dated=EXPERIMENT + '/datedmutsel',
-          read=EXPERIMENT + '/readdatedmutsel'
+          dated=EXPERIMENT + '/branchmutsel',
+          read=EXPERIMENT + '/readbranchmutsel'
     input: dir=EXPERIMENT + '/bayescode.version'
     params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/bayescode.stdout', err=EXPERIMENT + '/bayescode.stderr'
     shell:
-         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out} && cp _build/datedmutsel {EXPERIMENT} && cp _build/readdatedmutsel {EXPERIMENT}'
+         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out} && cp _build/branchmutsel {EXPERIMENT} && cp _build/readbranchmutsel {EXPERIMENT}'
 
 rule make_simuevol:
     output:

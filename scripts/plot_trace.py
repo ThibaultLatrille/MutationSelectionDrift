@@ -11,10 +11,11 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
     simu_params = {k: v[0] for k, v in pd.read_csv(input_simu + '.parameters.tsv', sep='\t').items()}
     simupoly = "population_size" in simu_params
 
-    filenames = ["Simulation", "dNdN0_predicted_SIMU", "dNdN0_sequence_wise_predicted_SIMU", "dNdN0_count_based_SIMU",
-                 "dNdS_event_based_SIMU", "dNdS_count_based_SIMU"]
+    filenames = ["Simulation", "dNdN0_predicted_SIMU", "dNdN0_sequence_wise_predicted_SIMU",
+                 "dNdN0_count_based_SIMU", "dNdS_event_based_SIMU", "dNdS_count_based_SIMU"]
     if simupoly:
-        filenames += ["Watterson_SIMU", "WattersonSynonymous_SIMU", "Pairwise_SIMU", "PairwiseSynonymous_SIMU", "dNdS_events_sum_SIMU"]
+        filenames += ["Watterson_SIMU", "WattersonSynonymous_SIMU", "Pairwise_SIMU", "PairwiseSynonymous_SIMU",
+                      "dNdN0_event_based_SIMU", "dNdS_events_sum_SIMU"]
     else:
         filenames += ["dNdN0_flow_based_SIMU"]
 
@@ -42,6 +43,8 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             else:
                 branch_rate = max(
                     float(node.Branch_mutation_rate_per_generation) / float(node.Branch_generation_time_in_year), 1e-30)
+            node.add_feature("LogBranchNe.Simulation", float(node.Branch_LogNe))
+            node.add_feature("LogBranchMutRate.Simulation", np.log10(rate))
             node.add_feature("LogBranchLength.Simulation", np.log10(time * branch_rate))
             node.add_feature("BranchdNdS.dNdN0_predicted_SIMU", float(node.Branch_dNdN0_predicted))
             node.add_feature("BranchdNdS.dNdN0_sequence_wise_predicted_SIMU",
@@ -51,6 +54,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             node.add_feature("BranchdNdS.dNdS_count_based_SIMU", float(node.Branch_dNdS_count_based))
             if simupoly:
                 node.add_feature("BranchdNdS.dNdS_events_sum_SIMU", float(node.Branch_dNdS))
+                node.add_feature("BranchdNdS.dNdN0_event_based_SIMU", float(node.Branch_dNdN0_event_based))
             else:
                 node.add_feature("BranchdNdS.dNdN0_flow_based_SIMU", float(node.Branch_dNdN0_flow_based))
         if node.is_leaf() and simupoly:
@@ -81,10 +85,18 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     values = np.log10(np.exp(param_trace))
                     node.add_feature("LogNodeNe." + filename, np.mean(values))
                     node.add_feature("LogNodeNe_var." + filename, np.var(values))
+                elif "*BranchPopSize" in param:
+                    values = np.log10(param_trace)
+                    node.add_feature("LogBranchNe." + filename, np.mean(values))
+                    node.add_feature("LogBranchNe_var." + filename, np.var(values))
                 elif "*NodeRate" in param:
                     values = np.log10(np.exp(param_trace))
                     node.add_feature("LogNodeMutRate." + filename, np.mean(values))
                     node.add_feature("LogNodeMutRate_var." + filename, np.var(values))
+                elif "*BranchRate" in param:
+                    values = np.log10(param_trace)
+                    node.add_feature("LogBranchMutRate." + filename, np.mean(values))
+                    node.add_feature("LogBranchMutRate_var." + filename, np.var(values))
                 elif "*BranchTime" in param:
                     assert (not node.is_root())
                     node.add_feature("BranchTime." + filename, np.mean(param_trace))
@@ -113,7 +125,8 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         plt.clf()
         plt.close('all')
 
-    for arg in ["BranchTime", "LeafTheta", "BranchdNdS", "LogBranchLength", "LogNodeMutRate", "LogNodeNe"]:
+    for arg in ["BranchTime", "LeafTheta", "BranchdNdS", "LogBranchLength", "LogNodeMutRate", "LogBranchMutRate",
+                "LogNodeNe", "LogBranchNe"]:
         axis_dict = dict()
         err_dict = dict()
         for filename in filenames:
@@ -126,7 +139,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                 if len(err) > 0:
                     err_dict[filename] = np.sqrt(err)
 
-        if len(axis_dict) > 0:
+        if len(axis_dict) > 1:
             for filename, axis in axis_dict.items():
                 max_arg, min_arg = max(axis), min(axis)
                 ts = TreeStyle()
