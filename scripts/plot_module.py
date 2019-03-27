@@ -79,7 +79,7 @@ def min_max(axis, err):
         return min_axis, max_axis
 
 
-def plot_correlation(name, axis_dict, err_dict):
+def plot_correlation(name, axis_dict, err_dict, color_map):
     f, axs = plt.subplots(len(axis_dict), len(axis_dict),
                           figsize=(len(axis_dict) * 640 / my_dpi, len(axis_dict) * 480 / my_dpi), dpi=my_dpi)
 
@@ -93,10 +93,15 @@ def plot_correlation(name, axis_dict, err_dict):
     for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
         for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
             ax = axs[row][col]
+            cm = plt.cm.get_cmap('RdYlBu')
 
+            scatter_kwargs = {"zorder": 100}
+            error_kwargs = {"lw": .5, "zorder": 0}
+
+            sc = ax.scatter(col_axis, row_axis, c=color_map, cmap=cm, **scatter_kwargs)
             ax.errorbar(col_axis, row_axis,
-                        xerr=err_dict[col_filename], yerr=err_dict[row_filename],
-                        fmt='o', color=BLUE, ecolor=GREEN, label=r"${0}$ nodes".format(len(row_axis)))
+                        xerr=err_dict[col_filename], yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
+                        ecolor=GREEN, label=r"${0}$ nodes".format(len(row_axis)), **error_kwargs)
 
             min_col, max_col = min_max(col_axis, err_dict[col_filename])
             idf = np.linspace(min_col, max_col, 30)
@@ -114,7 +119,11 @@ def plot_correlation(name, axis_dict, err_dict):
                 ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0:.3g}x {3} {1:.3g}$ ($r^2={2:.3g})$".format(
                     float(a), abs(float(b)), results.rsquared, "+" if float(b) > 0 else "-"))
                 ax.legend()
+
     plt.tight_layout()
+    f.subplots_adjust(right=0.9)
+    cbar_ax = f.add_axes([0.92, 0.05, 0.05, 0.90])
+    f.colorbar(sc, cax=cbar_ax)
     plt.savefig(name, format='png')
     plt.clf()
     plt.close('all')

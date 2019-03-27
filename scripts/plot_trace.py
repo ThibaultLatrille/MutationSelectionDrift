@@ -129,10 +129,18 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                 "LogNodeNe", "LogBranchNe"]:
         axis_dict = dict()
         err_dict = dict()
+        der_pop_size = []
         for filename in filenames:
             attr = arg + "." + filename
             var = arg + "_var." + filename
             axis = np.array([getattr(node, attr) for node in tree.traverse() if attr in node.features])
+            if len(der_pop_size) == 0:
+                for n in tree.traverse():
+                    if attr in n.features:
+                        if n.is_root():
+                            der_pop_size.append(0.0)
+                        else:
+                            der_pop_size.append(np.log10(float(n.population_size)) - float(n.Branch_LogNe))
             err = np.array([getattr(node, var) for node in tree.traverse() if var in node.features])
             if len(axis) > 0:
                 axis_dict[filename] = axis
@@ -154,7 +162,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                 ts.title.add_face(TextFace("{1} in {2}".format(output_plot, arg, filename), fsize=20), column=0)
                 tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts)
 
-            plot_correlation('{0}/correlation.{1}.png'.format(output_plot, arg), axis_dict, err_dict)
+            plot_correlation('{0}/correlation.{1}.png'.format(output_plot, arg), axis_dict, err_dict, der_pop_size)
 
 
 if __name__ == '__main__':
