@@ -39,7 +39,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             time = float(node.get_distance(node.up)) / simu_params["tree_max_distance_to_root_in_year"]
             node.add_feature("BranchTime.Simulation", float(time))
             if "Branch_mutation_rate" in node.features:
-                branch_rate = float(node.Branch_mutation_rate)
+                branch_rate = max(float(node.Branch_mutation_rate), 1e-30)
             else:
                 branch_rate = max(
                     float(node.Branch_mutation_rate_per_generation) / float(node.Branch_generation_time_in_year), 1e-30)
@@ -114,7 +114,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     node.add_feature("LeafTheta." + filename, np.mean(param_trace))
                     node.add_feature("LeafTheta_var." + filename, np.var(param_trace))
         if param.lower() in [s.lower() for s in simu_params]:
-            # If it can be found in the Simulation parameters
+#If it can be found in the Simulation parameters
             plt.axhline(y=simu_params[param], xmin=0.0, xmax=1.0, color='r', label="Simulation")
 
         plt.xlabel('Point')

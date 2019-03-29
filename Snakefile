@@ -107,6 +107,7 @@ SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
 SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
 SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
 SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE'])
+SIMULATION_PARAMS += ' --seed {0}'.format(config['SIMULATION']['SEED'])
 if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
     SIMULATION_PARAMS += ' --branch_wise_correlation'
 
@@ -214,7 +215,7 @@ rule run_inference:
          simu=rules.run_simulation.output,
          param_infer=EXPERIMENT + '/config.INFERENCE'
     params:
-          time="2-00:00", mem=5000, threads=1,
+          time="4-00:00", mem=5000, threads=1,
           poly=lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
     benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_run.stderr'
