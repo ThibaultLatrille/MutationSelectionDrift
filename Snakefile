@@ -111,7 +111,7 @@ SIMULATION_PARAMS += ' --seed {0}'.format(config['SIMULATION']['SEED'])
 if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
     SIMULATION_PARAMS += ' --branch_wise_correlation'
 
-SIMUPOLY_PARAMS = '--pop_size {0}'.format(config['SimuPoly']['POP_SIZE'])
+SIMUPOLY_PARAMS = '--population_size {0}'.format(config['SimuPoly']['POP_SIZE'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
 
 SIMUDIV_PARAMS = '--nbr_grid_step {0}'.format(config['SimuDiv']['NBR_GRID_STEP'])
@@ -160,13 +160,12 @@ for program in ['bayescode', 'SimuEvol']:
         with open(version_file, 'w') as version_append:
             version_append.write(stdout)
 
-localrules:all, plot_simulation, plot_trace, plot_profiles, make_bayescode, make_simuevol
+localrules: all, all_prefs, all_trace, plot_simulation, plot_trace, plot_profiles, make_bayescode, make_simuevol
 
 rule all:
     input:
-          expand(EXPERIMENT + '/plot_{simumode}', simumode=INFERENCE_SIMULATORS),
-          expand(EXPERIMENT + '/inference_plot_{simumode}', simumode=INFERENCE_SIMULATORS),
-          expand(EXPERIMENT + '/{simumode}_inferred_prefs', simumode=INFERENCE_SIMULATORS)
+          EXPERIMENT + '/all_prefs',
+          EXPERIMENT + '/all_trace'
 
 rule make_bayescode:
     output:
@@ -232,6 +231,12 @@ rule plot_trace:
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --simu {input.simu} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
 
+rule all_trace:
+    output: touch(EXPERIMENT + '/all_trace')
+    input:
+         expand(EXPERIMENT + '/plot_{simumode}', simumode=INFERENCE_SIMULATORS),
+         expand(EXPERIMENT + '/inference_plot_{simumode}', simumode=INFERENCE_SIMULATORS)
+
 rule read_profiles:
     output: EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_read.siteprofiles'
     input:
@@ -251,3 +256,8 @@ rule plot_profiles:
     log: out=EXPERIMENT + '/{simumode}_inferred_prefs.stdout', err=EXPERIMENT + '/{simumode}_inferred_prefs.stderr'
     shell:
          'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
+
+rule all_prefs:
+    output: touch(EXPERIMENT + '/all_prefs')
+    input:
+         expand(EXPERIMENT + '/{simumode}_inferred_prefs', simumode=INFERENCE_SIMULATORS)

@@ -114,7 +114,6 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     node.add_feature("LeafTheta." + filename, np.mean(param_trace))
                     node.add_feature("LeafTheta_var." + filename, np.var(param_trace))
         if param.lower() in [s.lower() for s in simu_params]:
-#If it can be found in the Simulation parameters
             plt.axhline(y=simu_params[param], xmin=0.0, xmax=1.0, color='r', label="Simulation")
 
         plt.xlabel('Point')
@@ -125,8 +124,8 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         plt.clf()
         plt.close('all')
 
-    for arg in ["BranchTime", "LeafTheta", "BranchdNdS", "LogBranchLength", "LogNodeMutRate", "LogBranchMutRate",
-                "LogNodeNe", "LogBranchNe"]:
+    for arg in ["LeafTheta", "BranchdNdS", "LogNodeMutRate", "LogBranchMutRate",
+                "LogNodeNe", "LogBranchNe", "LogBranchLength", "BranchTime"]:
         axis_dict = dict()
         err_dict = dict()
         der_pop_size = []
@@ -149,10 +148,19 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
 
         if len(axis_dict) > 1:
             for filename, axis in axis_dict.items():
-                max_arg, min_arg = max(axis), min(axis)
                 ts = TreeStyle()
                 ts.show_leaf_name = True
-                ts.complete_branch_lines_when_necessary = False
+                if ("BranchTime" in arg) or ("LogBranchLength" in arg):
+                    for n in tree.traverse():
+                        if not n.is_root():
+                            if "BranchTime" in arg:
+                                n.dist = getattr(n, arg + "." + filename)
+                            else:
+                                n.dist = np.exp(getattr(n, arg + "." + filename))
+                else:
+                    ts.complete_branch_lines_when_necessary = False
+
+                max_arg, min_arg = max(axis), min(axis)
                 columns = sorted(axis_dict)
                 ts.layout_fn = lambda x: mutiple_layout(x, arg, min_arg, max_arg, filename, columns)
                 for col, name in enumerate(columns):
@@ -160,7 +168,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     nameF.rotation = -90
                     ts.aligned_header.add_face(nameF, column=col)
                 ts.title.add_face(TextFace("{1} in {2}".format(output_plot, arg, filename), fsize=20), column=0)
-                tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts)
+                tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts, w=1080, h=1080)
 
             plot_correlation('{0}/correlation.{1}.png'.format(output_plot, arg), axis_dict, err_dict, der_pop_size)
 
