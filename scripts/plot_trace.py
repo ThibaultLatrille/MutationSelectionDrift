@@ -24,7 +24,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         for param, vals in pd.read_csv(filepath + '.trace', sep='\t').items():
             if param not in traces:
                 traces[param] = dict()
-            traces[param][os.path.basename(filepath)] = vals[burn_in:]
+            traces[param][os.path.basename(filepath)] = vals
 
     tree = Tree(input_simu + ".nhx", format=3)
     is_ultrametric(tree)
@@ -74,6 +74,10 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=filename)
 
             if param[0] == "*":
+                if len(param_trace) < burn_in:
+                    burn_in = 0
+                    print("The burn-in value has been set to 0 since there is not enough points.")
+                values = param_trace[burn_in:]
                 node_name = param.split("_")[-1]
 
                 if node_name != "":
@@ -82,39 +86,41 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                     node = tree.get_tree_root()
 
                 if "*NodePopSize" in param:
-                    values = np.log10(np.exp(param_trace))
+                    values = np.log10(np.exp(values))
                     node.add_feature("LogNodeNe." + filename, np.mean(values))
                     node.add_feature("LogNodeNe_var." + filename, np.var(values))
                 elif "*BranchPopSize" in param:
-                    values = np.log10(param_trace)
+                    values = np.log10(values)
                     node.add_feature("LogBranchNe." + filename, np.mean(values))
                     node.add_feature("LogBranchNe_var." + filename, np.var(values))
                 elif "*NodeRate" in param:
-                    values = np.log10(np.exp(param_trace))
+                    values = np.log10(np.exp(values))
                     node.add_feature("LogNodeMutRate." + filename, np.mean(values))
                     node.add_feature("LogNodeMutRate_var." + filename, np.var(values))
                 elif "*BranchRate" in param:
-                    values = np.log10(param_trace)
+                    values = np.log10(values)
                     node.add_feature("LogBranchMutRate." + filename, np.mean(values))
                     node.add_feature("LogBranchMutRate_var." + filename, np.var(values))
                 elif "*BranchTime" in param:
                     assert (not node.is_root())
-                    node.add_feature("BranchTime." + filename, np.mean(param_trace))
-                    node.add_feature("BranchTime_var." + filename, np.var(param_trace))
+                    node.add_feature("BranchTime." + filename, np.mean(values))
+                    node.add_feature("BranchTime_var." + filename, np.var(values))
                 elif "*BranchLength" in param:
                     assert (not node.is_root())
-                    node.add_feature("LogBranchLength." + filename, np.mean(np.log10(param_trace)))
-                    node.add_feature("LogBranchLength_var." + filename, np.var(np.log10(param_trace)))
+                    node.add_feature("LogBranchLength." + filename, np.mean(np.log10(values)))
+                    node.add_feature("LogBranchLength_var." + filename, np.var(np.log10(values)))
                 elif "*BranchdNdS" in param:
                     assert (not node.is_root())
-                    node.add_feature("BranchdNdS." + filename, np.mean(param_trace))
-                    node.add_feature("BranchdNdS_var." + filename, np.var(param_trace))
+                    node.add_feature("BranchdNdS." + filename, np.mean(values))
+                    node.add_feature("BranchdNdS_var." + filename, np.var(values))
                 elif "*Theta" in param:
                     assert (node.is_leaf())
-                    node.add_feature("LeafTheta." + filename, np.mean(param_trace))
-                    node.add_feature("LeafTheta_var." + filename, np.var(param_trace))
+                    node.add_feature("LeafTheta." + filename, np.mean(values))
+                    node.add_feature("LeafTheta_var." + filename, np.var(values))
+
         if param.lower() in [s.lower() for s in simu_params]:
             plt.axhline(y=simu_params[param], xmin=0.0, xmax=1.0, color='r', label="Simulation")
+        plt.axvline(x=burn_in, ymin=0.0, ymax=1.0, color='grey')
 
         plt.xlabel('Point')
         plt.ylabel(param)

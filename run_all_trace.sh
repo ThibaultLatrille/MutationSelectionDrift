@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-for EXPERIMENT in ./Experiments/Chronogram*; do
+for EXPERIMENT in ./Experiments/plac_coe*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
-  # cp Snakefile ${EXPERIMENT}
   cd ${EXPERIMENT}
   snakemake --unlock
   snakemake --touch

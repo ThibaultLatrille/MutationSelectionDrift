@@ -24,6 +24,14 @@ def convertible_to_float(f):
         return False
 
 
+def to_float(f):
+    c = float(f)
+    if np.isnan(c):
+        return 0.0
+    else:
+        return c
+
+
 def tex_f(f):
     if 0.1 < f < 100:
         return "{0:.2g}".format(f)
