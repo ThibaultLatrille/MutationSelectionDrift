@@ -101,8 +101,8 @@ PREFERENCES = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PREFERENCES'])
 SIMULATION_PARAMS = '--newick ' + TREE
 SIMULATION_PARAMS += ' --preferences ' + PREFERENCES
 SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['NUC_MATRIX'])
-SIMULATION_PARAMS += ' --correlation_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['COR_MATRIX'])
-SIMULATION_PARAMS += ' --mu {0}'.format(config['SIMULATION']['MUTATION_RATE'])
+SIMULATION_PARAMS += ' --precision_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PRECISION_MATRIX'])
+SIMULATION_PARAMS += ' --mutation_rate_per_generation {0}'.format(config['SIMULATION']['MUTATION_RATE_PER_GENERATION'])
 SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
 SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
 SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
@@ -110,6 +110,12 @@ SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE']
 SIMULATION_PARAMS += ' --seed {0}'.format(config['SIMULATION']['SEED'])
 if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
     SIMULATION_PARAMS += ' --branch_wise_correlation'
+if config['SIMULATION']['FIXED_POP_SIZES']:
+    SIMULATION_PARAMS += ' --fix_pop_size'
+if config['SIMULATION']['FIXED_MUT_RATE']:
+    SIMULATION_PARAMS += ' --fix_mut_rate'
+if config['SIMULATION']['FIXED_GENERATION_TIME']:
+    SIMULATION_PARAMS += ' --fix_gen_time'
 
 SIMUPOLY_PARAMS = '--population_size {0}'.format(config['SimuPoly']['POP_SIZE'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
@@ -129,8 +135,8 @@ if config['INFERENCE']['CLAMP_PREFERENCES']:
     INFERENCE_PARAMS += ' --profiles ' + copy_params(EXPERIMENT, ROOT, PREFERENCES)
 else:
     INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
-if config['INFERENCE']['CLAMP_MUTATION_RATES']:
-    INFERENCE_PARAMS += ' --clamp_rates'
+if config['INFERENCE']['CLAMP_GENERATION_TIME']:
+    INFERENCE_PARAMS += ' --clamp_gen_time'
 if config['INFERENCE']['CLAMP_POP_SIZES']:
     INFERENCE_PARAMS += ' --clamp_pop_sizes'
 if config['INFERENCE']['CLAMP_NUC_MATRIX']:
@@ -142,8 +148,9 @@ if config['INFERENCE']['DEBUG']:
 
 INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
 INFERENCE_POLYMORPHISM = config['INFERENCE_REPLICATE']['POLYMORPHISM']
-INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 INFERENCE_POLYMORPHISM_PARAM = {True: ' -p', False: ''}
+INFERENCE_MODELS = config['INFERENCE_REPLICATE']['MODELS']
+INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 
 for program in ['bayescode', 'SimuEvol']:
     stdout = cmd_to_stdout('cd {0}/{1} && git log -1'.format(ROOT, program))
@@ -160,22 +167,28 @@ for program in ['bayescode', 'SimuEvol']:
         with open(version_file, 'w') as version_append:
             version_append.write(stdout)
 
-localrules: all, all_prefs, all_trace, plot_simulation, plot_trace, plot_profiles, make_bayescode, make_simuevol
+localrules: all, all_prefs, all_trace, plot_simulation, plot_trace, plot_profiles, make_bayescode, bayescode_model, make_simuevol
 
 rule all:
     input:
-          EXPERIMENT + '/all_prefs',
-          EXPERIMENT + '/all_trace'
+         EXPERIMENT + '/all_prefs',
+         EXPERIMENT + '/all_trace'
 
 rule make_bayescode:
-    output:
-          dated=EXPERIMENT + '/branchmutsel',
-          read=EXPERIMENT + '/readbranchmutsel'
+    output: touch(EXPERIMENT + "/make_bayescode")
     input: dir=EXPERIMENT + '/bayescode.version'
     params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/bayescode.stdout', err=EXPERIMENT + '/bayescode.stderr'
     shell:
-         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out} && cp _build/branchmutsel {EXPERIMENT} && cp _build/readbranchmutsel {EXPERIMENT}'
+         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out}'
+
+rule bayescode_model:
+    output:
+          model=EXPERIMENT + '/{model}mutsel',
+          read=EXPERIMENT + '/read{model}mutsel'
+    input: EXPERIMENT + "/make_bayescode"
+    shell:
+         'cd {ROOT}/bayescode && cp _build/{wildcards.model}mutsel {EXPERIMENT} && cp _build/read{wildcards.model}mutsel {EXPERIMENT}'
 
 rule make_simuevol:
     output:
@@ -193,14 +206,14 @@ rule run_simulation:
          config_core=EXPERIMENT + '/config.SIMULATION',
          config_pan=EXPERIMENT + '/config.' + '{simumode}'
     params:
-         time="0-23:00", mem=5000, threads=1,
-         pan=lambda w: SIMULATION_SIMUMODE_PARAM[w.simumode]
+          time="0-23:00", mem=5000, threads=1,
+          pan=lambda w: SIMULATION_SIMUMODE_PARAM[w.simumode]
     benchmark: EXPERIMENT + "/benchmarks.simulation.{simumode}.tsv"
     log: out=EXPERIMENT + '/{simumode}_exp.stdout', err=EXPERIMENT + '/{simumode}_exp.stderr'
     shell: '{input.exec} {SIMULATION_PARAMS} {params.pan} --output {output} 2> {log.err} 1> {log.out}'
 
 rule plot_simulation:
-    output: plot=touch(EXPERIMENT + '/plot_{simumode}')
+    output: plot=touch(EXPERIMENT + '/simu_{simumode}_plot')
     input:
          src=ROOT + "/scripts/plot_simulation.py",
          simu=rules.run_simulation.output
@@ -208,56 +221,56 @@ rule plot_simulation:
     shell: 'python3 {input.src} --tree {input.simu}.nhx'
 
 rule run_inference:
-    output: touch(EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_run')
+    output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run')
     input:
-         exec=rules.make_bayescode.output.dated,
+         exec=rules.bayescode_model.output.model,
          simu=rules.run_simulation.output,
          param_infer=EXPERIMENT + '/config.INFERENCE'
     params:
           time="4-00:00", mem=5000, threads=1,
           poly=lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
-    benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{polymorphism}_{chain}_run.tsv"
-    log: out=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_run.stderr'
+    benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
+    log: out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
     shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
 
 rule plot_trace:
-    output: plot=directory(EXPERIMENT + '/inference_plot_{simumode}')
+    output: plot=directory(EXPERIMENT + '/inference_{simumode}_{model}_plot')
     input:
          src=ROOT + "/scripts/plot_trace.py",
-         trace=expand(rules.run_inference.output, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, simumode=INFERENCE_SIMULATORS),
+         trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
          simu=rules.run_simulation.output,
          param_plot=EXPERIMENT + '/config.PLOT'
-    log: out=EXPERIMENT + '/{simumode}_inference_plot.stdout', err=EXPERIMENT + '/{simumode}_inference_plot.stderr'
+    log: out=EXPERIMENT + '/{simumode}_{model}_inference_plot.stdout', err=EXPERIMENT + '/{simumode}_{model}_inference_plot.stderr'
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --simu {input.simu} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
 
 rule all_trace:
     output: touch(EXPERIMENT + '/all_trace')
     input:
-         expand(EXPERIMENT + '/plot_{simumode}', simumode=INFERENCE_SIMULATORS),
-         expand(EXPERIMENT + '/inference_plot_{simumode}', simumode=INFERENCE_SIMULATORS)
+         expand(EXPERIMENT + '/simu_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
+         expand(EXPERIMENT + '/inference_{simumode}_{model}_plot', simumode=INFERENCE_SIMULATORS, model=INFERENCE_MODELS)
 
 rule read_profiles:
-    output: EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_read.siteprofiles'
+    output: EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read.siteprofiles'
     input:
          trace=rules.run_inference.output,
-         exec=rules.make_bayescode.output.read,
+         exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
     params: time="0-01:00", mem=5000, threads=1
-    benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{polymorphism}_{chain}_read.tsv"
-    log: out=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_read.stdout', err=EXPERIMENT + '/{simumode}_{polymorphism}_{chain}_read.stderr'
+    benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
+    log: out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read.stdout', err=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read.stderr'
     shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
 
 rule plot_profiles:
-    output: prefs=directory(EXPERIMENT + '/{simumode}_inferred_prefs')
+    output: prefs=directory(EXPERIMENT + '/{simumode}_{model}_inferred_prefs')
     input:
          src=ROOT + "/scripts/plot_profiles.py",
-         profiles=expand(rules.read_profiles.output, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, simumode=INFERENCE_SIMULATORS)
-    log: out=EXPERIMENT + '/{simumode}_inferred_prefs.stdout', err=EXPERIMENT + '/{simumode}_inferred_prefs.stderr'
+         profiles=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read.siteprofiles', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
+    log: out=EXPERIMENT + '/{simumode}_{model}_inferred_prefs.stdout', err=EXPERIMENT + '/{simumode}_{model}_inferred_prefs.stderr'
     shell:
          'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
 
 rule all_prefs:
     output: touch(EXPERIMENT + '/all_prefs')
     input:
-         expand(EXPERIMENT + '/{simumode}_inferred_prefs', simumode=INFERENCE_SIMULATORS)
+         expand(EXPERIMENT + '/{simumode}_{model}_inferred_prefs', simumode=INFERENCE_SIMULATORS, model=INFERENCE_MODELS)
