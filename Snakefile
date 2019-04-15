@@ -228,10 +228,11 @@ rule run_inference:
          param_infer=EXPERIMENT + '/config.INFERENCE'
     params:
           time="4-00:00", mem=5000, threads=1,
-          poly=lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true']
+          poly=lambda w: INFERENCE_POLYMORPHISM_PARAM[w.polymorphism.lower() == 'true'],
+          traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu ) if (config['INFERENCE']['TRAITS'] and w.model == "node") else ""
     benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.traits} {output} 2> {log.err} 1> {log.out}'
 
 rule plot_trace:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_{model}_plot')

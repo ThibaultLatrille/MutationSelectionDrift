@@ -12,7 +12,8 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
     simupoly = "population_size" in simu_params
 
     filenames = ["Simulation", "dNdN0_predicted_SIMU", "dNdN0_sequence_wise_predicted_SIMU",
-                 "dNdN0_count_based_SIMU", "dNdS_event_based_SIMU", "dNdS_count_based_SIMU"]
+                 "dNdN0_count_based_SIMU", "dNdS_event_based_SIMU", "dNdS_count_based_SIMU",
+                 "NeHarmonic_SIMU", "NeArithmetic_SIMU", "NeGeometric_SIMU"]
     if simupoly:
         filenames += ["Watterson_SIMU", "WattersonSynonymous_SIMU", "Pairwise_SIMU", "PairwiseSynonymous_SIMU",
                       "dNdN0_event_based_SIMU", "dNdS_events_sum_SIMU"]
@@ -32,19 +33,17 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
         if "mutation_rate" in node.features:
             rate = float(node.mutation_rate)
         else:
-            rate = max(float(node.mutation_rate_per_generation) / float(node.generation_time_in_year), 1e-30)
+            rate = float(node.mutation_rate_per_generation) / float(node.generation_time)
         node.add_feature("LogNodeNe.Simulation", np.log10(float(node.population_size)))
         node.add_feature("LogNodeMutRate.Simulation", np.log10(rate))
         if not node.is_root():
             time = float(node.get_distance(node.up)) / simu_params["tree_max_distance_to_root_in_year"]
             node.add_feature("BranchTime.Simulation", float(time))
-            if "Branch_mutation_rate" in node.features:
-                branch_rate = max(float(node.Branch_mutation_rate), 1e-30)
-            else:
-                branch_rate = max(
-                    float(node.Branch_mutation_rate_per_generation) / float(node.Branch_generation_time_in_year), 1e-30)
-            node.add_feature("LogBranchNe.Simulation", float(node.Branch_LogNe))
-            node.add_feature("LogBranchMutRate.Simulation", np.log10(rate))
+            branch_rate = float(node.Branch_mutation_rate_per_generation) / float(node.Branch_generation_time)
+            node.add_feature("LogBranchNe.NeGeometric_SIMU", float(node.Branch_LogNe))
+            node.add_feature("LogBranchNe.NeHarmonic_SIMU", np.log10(float(node.Branch_harmonic_population_size)))
+            node.add_feature("LogBranchNe.NeArithmetic_SIMU", np.log10(float(node.Branch_arithmetic_population_size)))
+            node.add_feature("LogBranchMutRate.Simulation", np.log10(branch_rate))
             node.add_feature("LogBranchLength.Simulation", np.log10(time * branch_rate))
             node.add_feature("BranchdNdS.dNdN0_predicted_SIMU", float(node.Branch_dNdN0_predicted))
             node.add_feature("BranchdNdS.dNdN0_sequence_wise_predicted_SIMU",
@@ -139,18 +138,18 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             attr = arg + "." + filename
             var = arg + "_var." + filename
             axis = np.array([getattr(node, attr) for node in tree.traverse() if attr in node.features])
-            if len(der_pop_size) == 0:
-                for n in tree.traverse():
-                    if attr in n.features:
-                        if n.is_root():
-                            der_pop_size.append(0.0)
-                        else:
-                            der_pop_size.append(np.log10(float(n.population_size)) - float(n.Branch_LogNe))
-            err = np.array([getattr(node, var) for node in tree.traverse() if var in node.features])
             if len(axis) > 0:
                 axis_dict[filename] = axis
+                err = np.array([getattr(node, var) for node in tree.traverse() if var in node.features])
                 if len(err) > 0:
                     err_dict[filename] = np.sqrt(err)
+                if len(der_pop_size) == 0:
+                    for n in tree.traverse():
+                        if attr in n.features:
+                            if n.is_root():
+                                der_pop_size.append(0.0)
+                            else:
+                                der_pop_size.append(np.log10(float(n.population_size)) - float(n.Branch_LogNe))
 
         if len(axis_dict) > 1:
             for filename, axis in axis_dict.items():
