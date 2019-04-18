@@ -35,6 +35,6 @@ INFERENCE:
   CLAMP_POP_SIZES: false
   CLAMP_NUC_MATRIX: false
   CLAMP_CORR_MATRIX: false
-  DEBUG: false
+  GEODESIC: true
 PLOT:
   BURN_IN: 30

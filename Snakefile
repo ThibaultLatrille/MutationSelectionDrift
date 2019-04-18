@@ -143,8 +143,8 @@ if config['INFERENCE']['CLAMP_NUC_MATRIX']:
     INFERENCE_PARAMS += ' --clamp_nuc_matrix'
 if config['INFERENCE']['CLAMP_CORR_MATRIX']:
     INFERENCE_PARAMS += ' --clamp_corr_matrix'
-if config['INFERENCE']['DEBUG']:
-    INFERENCE_PARAMS += ' --debug'
+if config['INFERENCE']['GEODESIC']:
+    INFERENCE_PARAMS += ' --geodesic'
 
 INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
 INFERENCE_POLYMORPHISM = config['INFERENCE_REPLICATE']['POLYMORPHISM']

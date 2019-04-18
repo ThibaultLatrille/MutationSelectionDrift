@@ -5,7 +5,7 @@ import argparse
 import os
 
 
-def plot_trace(input_simu, input_trace, output_plot, burn_in):
+def plot_trace(input_simu, input_trace, output_plot, burn_in, render):
     traces = dict()
 
     simu_params = {k: v[0] for k, v in pd.read_csv(input_simu + '.parameters.tsv', sep='\t').items()}
@@ -57,8 +57,7 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
             else:
                 node.add_feature("BranchdNdS.dNdN0_flow_based_SIMU", float(node.Branch_dNdN0_flow_based))
         if node.is_leaf() and simupoly:
-            node.add_feature("LeafTheta.Simulation",
-                             4 * float(node.population_size) * float(node.mutation_rate_per_generation))
+            node.add_feature("LeafTheta.Simulation", float(node.theta_pred))
             node.add_feature("LeafTheta.Watterson_SIMU", float(node.theta_watterson))
             node.add_feature("LeafTheta.WattersonSynonymous_SIMU", float(node.theta_watterson_syn))
             node.add_feature("LeafTheta.Pairwise_SIMU", float(node.theta_pairwise))
@@ -152,30 +151,30 @@ def plot_trace(input_simu, input_trace, output_plot, burn_in):
                                 der_pop_size.append(np.log10(float(n.population_size)) - float(n.Branch_LogNe))
 
         if len(axis_dict) > 1:
-            for filename, axis in axis_dict.items():
-                ts = TreeStyle()
-                ts.show_leaf_name = True
-                if ("BranchTime" in arg) or ("LogBranchLength" in arg):
-                    for n in tree.traverse():
-                        if not n.is_root():
-                            if "BranchTime" in arg:
-                                n.dist = getattr(n, arg + "." + filename)
-                            else:
-                                n.dist = np.exp(getattr(n, arg + "." + filename))
-                else:
-                    ts.complete_branch_lines_when_necessary = False
-
-                max_arg, min_arg = max(axis), min(axis)
-                columns = sorted(axis_dict)
-                ts.layout_fn = lambda x: mutiple_layout(x, arg, min_arg, max_arg, filename, columns)
-                for col, name in enumerate(columns):
-                    nameF = TextFace(name, fsize=7)
-                    nameF.rotation = -90
-                    ts.aligned_header.add_face(nameF, column=col)
-                ts.title.add_face(TextFace("{1} in {2}".format(output_plot, arg, filename), fsize=20), column=0)
-                tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts, w=1080, h=1080)
-
             plot_correlation('{0}/correlation.{1}.png'.format(output_plot, arg), axis_dict, err_dict, der_pop_size)
+            if render:
+                for filename, axis in axis_dict.items():
+                    ts = TreeStyle()
+                    ts.show_leaf_name = True
+                    if ("BranchTime" in arg) or ("LogBranchLength" in arg):
+                        for n in tree.traverse():
+                            if not n.is_root():
+                                if "BranchTime" in arg:
+                                    n.dist = getattr(n, arg + "." + filename)
+                                else:
+                                    n.dist = np.exp(getattr(n, arg + "." + filename))
+                    else:
+                        ts.complete_branch_lines_when_necessary = False
+
+                    max_arg, min_arg = max(axis), min(axis)
+                    columns = sorted(axis_dict)
+                    ts.layout_fn = lambda x: mutiple_layout(x, arg, min_arg, max_arg, filename, columns)
+                    for col, name in enumerate(columns):
+                        nameF = TextFace(name, fsize=7)
+                        nameF.rotation = -90
+                        ts.aligned_header.add_face(nameF, column=col)
+                    ts.title.add_face(TextFace("{1} in {2}".format(output_plot, arg, filename), fsize=20), column=0)
+                    tree.render("{0}/nhx.{1}.{2}.png".format(output_plot, arg, filename), tree_style=ts, w=1080, h=1080)
 
 
 if __name__ == '__main__':
@@ -184,5 +183,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', required=True, type=str, dest="output")
     parser.add_argument('-t', '--trace', required=True, type=str, nargs='+', dest="trace")
     parser.add_argument('-b', '--burn_in', required=False, type=int, default=0, dest="burn_in")
+    parser.add_argument('--render', dest='render', action='store_true')
+    parser.set_defaults(render=False)
     args = parser.parse_args()
-    plot_trace(args.simu, args.trace, args.output, args.burn_in)
+    plot_trace(args.simu, args.trace, args.output, args.burn_in, args.render)

@@ -4,7 +4,7 @@ import argparse
 import os
 
 
-def plot_simulation(input_simu):
+def plot_simulation(input_simu, render):
     t = Tree(input_simu, format=3)
 
     nodes_file = input_simu.replace(".nhx", ".nodes.tsv")
@@ -46,7 +46,7 @@ def plot_simulation(input_simu):
     for arg in args_nodes:
         values = [float(getattr(n, arg)) for n in t.traverse() if
                   arg in n.features and convertible_to_float(getattr(n, arg))]
-        if len(values) > 1:
+        if len(values) > 1 and render:
             ts = TreeStyle()
             ts.show_leaf_name = True
             ts.complete_branch_lines_when_necessary = False
@@ -58,7 +58,7 @@ def plot_simulation(input_simu):
             ts.aligned_header.add_face(nameF, column=0)
             ts.title.add_face(TextFace("{0} in simulation".format(arg), fsize=20), column=0)
             t.render("{0}.{1}.png".format(input_simu, arg), tree_style=ts)
-
+        if len(values) > 1:
             if ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
@@ -69,7 +69,9 @@ def plot_simulation(input_simu):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--render', dest='render', action='store_true')
+    parser.set_defaults(render=False)
     parser.add_argument('-t', '--tree', required=True, type=str, default='',
                         dest="t", metavar="<tree>", help="The tree to be drawn")
     args = parser.parse_args()
-    plot_simulation(args.t)
+    plot_simulation(args.t, args.render)
