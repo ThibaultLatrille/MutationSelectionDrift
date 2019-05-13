@@ -7,7 +7,7 @@
 *~
 .snakemake/
 Data*/Experiments/*
-DataOrthoMam/singlegene_alignments
+DataEmpirical/OrthoMam/singlegene_alignments
 orthomam.tsv
 *.fa
 *.bestTree

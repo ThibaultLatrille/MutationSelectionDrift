@@ -146,13 +146,12 @@ def to_coord(x, y, xmin, xmax, ymin, ymax, plt_xmin, plt_ymin, plt_width, plt_he
     return x, y
 
 
-def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_width=0.5, hz_line_width=4.0, nbr_steps=30,
+def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_width=0.5, hz_line_width=0.2,
               max_circle_size=20, min_circle_size=4):
     node_list = tree.iter_descendants(strategy='postorder')
     node_list = chain(node_list, [tree])
 
-    vlinec, vlines, hlinec, hlines, nodes, nodex, nodey, ali_lines = [], [], [], [], [], [], [], []
-    vblankline, hblankline = [], []
+    vlinec, vlines, vblankline, hblankline, nodes, nodex, nodey = [], [], [], [], [], [], []
 
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
@@ -169,7 +168,8 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
     else:
         max_annot = max(float(getattr(n, feature)) for n in tree.iter_leaves() if feature in n.features)
 
-    color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=plt.get_cmap("Spectral"))
+    cmap = plt.get_cmap("Spectral")
+    color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=cmap)
 
     node_pos = dict((n2, i) for i, n2 in enumerate(tree.get_leaves()[::-1]))
 
@@ -187,14 +187,14 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
         if n.is_leaf():
             y = node_pos[n]
 
-            node_name = n.name
+            node_name = " " + n.name
             if len(n.name) != max_name_size:
                 node_name += " " * (max_name_size - len(n.name))
             if feature in n.features:
                 node_name += " " + format_float(float(getattr(n, feature)))
             if min_node_annot and max_node_annot:
                 node_name += " [{0},{1}]".format(format_float(min_node_annot), format_float(max_node_annot))
-            ax.text(x + 0.06, y, node_name, va='center', size=font_size)
+            ax.text(x, y, node_name, va='center', size=font_size)
         else:
             y = np.mean([node_pos[n2] for n2 in n.children])
             node_pos[n] = y
@@ -207,18 +207,13 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
 
                 # draw horizontal lines
                 for child in n.children:
-                    seg_annot = node_annot
-                    annot_step = (float(getattr(child, feature)) - node_annot) / (nbr_steps - 1)
-
+                    child_annot = float(getattr(child, feature))
                     h = node_pos[child]
-                    x_start = x
-                    x_step = child.dist / nbr_steps
-
-                    for seg in range(nbr_steps):
-                        hlines.append(seg_annot)
-                        hlinec.append(((x_start, h), (x_start + x_step, h)))
-                        seg_annot += annot_step
-                        x_start += x_step
+                    xs = [[x, x], [x + child.dist, x + child.dist]]
+                    ys = [[h - hz_line_width, h + hz_line_width], [h - hz_line_width, h + hz_line_width]]
+                    zs = [[node_annot, node_annot], [child_annot, child_annot]]
+                    ax.pcolormesh(xs, ys, zs, cmap=cmap, norm=Normalize(vmin=min_annot, vmax=max_annot),
+                                  shading="gouraud")
             else:
                 vblankline.append(((x, node_pos[n.children[0]]), (x, node_pos[n.children[-1]])))
                 for child in n.children:
@@ -228,16 +223,11 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
         nodex.append(x)
         nodey.append(y)
 
-    hline_col = LineCollection(hlinec, colors=[color_map.to_rgba(l) for l in hlines],
-                               linestyle=line_type,
-                               linewidth=hz_line_width * 2)
     vline_col = LineCollection(vlinec, colors=[color_map.to_rgba(l) for l in vlines],
                                linestyle=line_type,
                                linewidth=vt_line_width * 2)
     ax.add_collection(LineCollection(hblankline, colors='black', linestyle=line_type, linewidth=hz_line_width * 2))
     ax.add_collection(LineCollection(vblankline, colors='black', linestyle=line_type, linewidth=vt_line_width * 2))
-
-    ax.add_collection(hline_col)
     ax.add_collection(vline_col)
 
     def circle_radius(annot):
@@ -269,6 +259,6 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
     cbar = fig.colorbar(color_map, ax=ax, orientation='horizontal', pad=0, shrink=0.8)
     cbar.ax.set_xlabel(feature, labelpad=0)
     plt.tight_layout()
-    plt.savefig(outputpath)
+    plt.savefig(outputpath, format=outputpath[-3:])
     plt.show()
     plt.close("all")

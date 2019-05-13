@@ -71,7 +71,7 @@ INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 for program in ['bayescode', 'SimuEvol']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, plot_simulation, plot_traces, plot_profiles, make_bayescode, bayescode_model, make_simuevol
+localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
 
 rule all:
     input:
@@ -159,14 +159,14 @@ else:
         shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.node}{params.traits} {output} 2> {log.err} 1> {log.out}'
 
 rule plot_traces:
-    output: plot=directory(EXPERIMENT + '/inference_{simumode}_{model}_traces')
+    output: plot=directory(EXPERIMENT + '/inference_{simumode}_traces')
     input:
-         src=ROOT + "/scripts/plot_inference.py",
-         trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
+         src=ROOT + "/scripts/plot_traces.py",
+         trace=expand(EXPERIMENT + '/{{simumode}}_{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
          config=EXPERIMENT + '/config.PLOT'
     log:
-         out=EXPERIMENT + '/std.{simumode}_{model}_inference_plot.stdout',
-         err=EXPERIMENT + '/std.{simumode}_{model}_inference_plot.stderr'
+         out=EXPERIMENT + '/std.{simumode}_inference_plot.stdout',
+         err=EXPERIMENT + '/std.{simumode}_inference_plot.stderr'
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
 
@@ -174,7 +174,7 @@ rule all_traces:
     output: touch(EXPERIMENT + '/all_traces')
     input:
          expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
-         expand(EXPERIMENT + '/inference_{simumode}_{model}_traces', simumode=INFERENCE_SIMULATORS, model=INFERENCE_MODELS)
+         expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS)
 
 rule read_profiles:
     output: EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read.siteprofiles'
@@ -182,7 +182,6 @@ rule read_profiles:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    params: time="0-01:00", mem=5000, threads=1
     benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
     log:
          out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stdout',
@@ -211,8 +210,6 @@ rule read_trees:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    params:
-         time="0-01:00", mem=5000, threads=1
     benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
     log:
          out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stdout',
@@ -222,7 +219,7 @@ rule read_trees:
 rule plot_trees:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_{model}_trees')
     input:
-         src=ROOT + "/scripts/plot_tree_and_simulation.py",
+         src=ROOT + "/scripts/plot_trees.py",
          simu=rules.run_simulation.output,
          trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
          read=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),

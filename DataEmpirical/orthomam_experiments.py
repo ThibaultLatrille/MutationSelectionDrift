@@ -26,24 +26,25 @@ def export_ali(filepath, ali_dict):
 
 
 def create_experiment(exons, replicate):
-    genes = pd.read_csv("./filtered.list")
-    tree = Tree("./rootedtree.nhx", format=1)
+    ortho_path = os.getcwd() + "/OrthoMam"
+    genes = pd.read_csv(ortho_path + "/filtered.list")
+    tree = Tree(ortho_path + "/rootedtree.nhx", format=1)
     print("{0} leaves for the rooted tree".format(len(tree)))
 
     for rep in range(replicate):
-        experiment = "OrthMam_Exons{0}_Replicates{1}_Id{2}".format(exons, replicate, rep)
+        experiment = "OrthoMam_Exons{0}_Replicates{1}_Id{2}".format(exons, replicate, rep)
         exp_path = os.getcwd() + '/Experiments/' + experiment
         os.makedirs(exp_path, exist_ok=True)
         os.system('cp config.yaml {0}'.format(exp_path))
         os.remove(exp_path + "/Snakefile") if os.path.exists(exp_path + "/Snakefile") else None
         os.symlink(os.getcwd() + "/Snakefile", exp_path + "/Snakefile")
 
-        os.system('cp rootedtree.nhx {0}'.format(exp_path))
+        os.system('cp {0}/rootedtree.nhx {1}'.format(ortho_path,exp_path))
 
         alignments = []
         taxa = set(tree.get_leaf_names())
         for selected in genes.sample(exons).values:
-            alignments.append(import_ali("{0}/singlegene_alignments/{1}.ali".format(os.getcwd(), selected[0])))
+            alignments.append(import_ali("{0}/singlegene_alignments/{1}.ali".format(ortho_path, selected[0])))
             taxa = taxa.union(alignments[-1].keys())
 
         merge_alignment = {k: "" for k in taxa}
