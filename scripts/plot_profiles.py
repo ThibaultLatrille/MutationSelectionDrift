@@ -1,21 +1,24 @@
 #!python3
 import argparse
 import os
-import dms_tools2.plot
 import subprocess
 from csv import reader
+import pandas as pd
+from plot_module import plot_correlation
 
 cmd = "dms2_logoplot --prefs {0} --outdir {1} --name {2} --nperline {3}"
 
 
 def plot_profiles(input_prefs, args_infer, args_output):
-    nperline = 53
+    axis_dict = dict()
+    nperline = 100
     header = "site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y\n"
 
     name = os.path.basename(input_prefs).replace(".prefs", "").replace("_", "-")
     subprocess.call(cmd.format(input_prefs, args_output, name, nperline), shell=True)
-    prefsfiles = [input_prefs]
-    names = [name]
+    df = pd.read_csv(input_prefs, sep=",")
+    df.drop('site', axis=1, inplace=True)
+    axis_dict[name] = df.values.flatten()
 
     for profile in args_infer:
         prefs = args_output + "/" + os.path.basename(profile).replace(".siteprofiles", ".prefs")
@@ -27,12 +30,12 @@ def plot_profiles(input_prefs, args_infer, args_output):
             for line in r:
                 w.write(",".join(line) + "\n")
 
-        prefsfiles.append(prefs)
-        names.append(name)
-        subprocess.call(cmd.format(input_prefs, args_output, name, nperline), shell=True)
+        subprocess.call(cmd.format(prefs, args_output, name, nperline), shell=True)
+        df = pd.read_csv(prefs, sep=",")
+        df.drop('site', axis=1, inplace=True)
+        axis_dict[name] = df.values.flatten()
 
-    plotfile = os.path.join(args_output, 'correlation.pdf')
-    dms_tools2.plot.plotCorrMatrix(names, prefsfiles, plotfile, datatype='prefs')
+    plot_correlation(os.path.join(args_output, 'correlation.png'), axis_dict, {}, [])
 
 
 if __name__ == '__main__':

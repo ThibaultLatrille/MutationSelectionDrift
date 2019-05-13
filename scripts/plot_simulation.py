@@ -1,10 +1,14 @@
 #!python3
-from plot_module import *
+from ete3 import Tree
+from plot_module import plot_correlation, plot_tree, convertible_to_float
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import argparse
 import os
 
 
-def plot_simulation(input_simu, render):
+def plot_simulation(input_simu, args_output):
     t = Tree(input_simu, format=3)
 
     nodes_file = input_simu.replace(".nhx", ".nodes.tsv")
@@ -34,7 +38,7 @@ def plot_simulation(input_simu, render):
                 plt.ylabel(ss)
                 plt.xticks(rotation='vertical')
                 plt.legend()
-                plt.savefig("{0}.tsv.{1}.png".format(input_simu.replace(".nhx", ""), ss), bbox_inches='tight')
+                plt.savefig("{0}/boxplot.{1}.png".format(args_output, ss), bbox_inches='tight')
                 plt.clf()
                 plt.close("all")
 
@@ -44,34 +48,23 @@ def plot_simulation(input_simu, render):
 
     branch_dict = {}
     for arg in args_nodes:
-        values = [float(getattr(n, arg)) for n in t.traverse() if
-                  arg in n.features and convertible_to_float(getattr(n, arg))]
-        if len(values) > 1 and render:
-            ts = TreeStyle()
-            ts.show_leaf_name = True
-            ts.complete_branch_lines_when_necessary = False
-            max_arg = max(values)
-            min_arg = min(values)
-            ts.layout_fn = lambda x: layout(x, arg, min_arg, max_arg)
-            nameF = TextFace(arg, fsize=7)
-            nameF.rotation = -90
-            ts.aligned_header.add_face(nameF, column=0)
-            ts.title.add_face(TextFace("{0} in simulation".format(arg), fsize=20), column=0)
-            t.render("{0}.{1}.png".format(input_simu, arg), tree_style=ts)
-        if len(values) > 1:
-            if ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
+        if arg != "dist" and arg != "support":
+            values = np.array([float(getattr(n, arg)) for n in t.traverse() if
+                               arg in n.features and convertible_to_float(getattr(n, arg))])
+            if len(values) > 1 and len(values) == len(list(t.traverse())):
+                plot_tree(t, arg, "{0}/tree.{1}.png".format(args_output, arg))
+            if len(values) > 1 and ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
     der_pop_size = [(np.log10(float(n.population_size)) - float(n.Branch_LogNe)) for n in t.traverse() if
                     not n.is_root()]
-    plot_correlation("{0}.correlation.png".format(input_simu), branch_dict, {}, der_pop_size)
+    plot_correlation("{0}/correlation.Ne.dNdS.png".format(args_output), branch_dict, {}, der_pop_size)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--render', dest='render', action='store_true')
-    parser.set_defaults(render=False)
     parser.add_argument('-t', '--tree', required=True, type=str, default='',
                         dest="t", metavar="<tree>", help="The tree to be drawn")
+    parser.add_argument('-o', '--output', required=True, type=str, dest="output")
     args = parser.parse_args()
-    plot_simulation(args.t, args.render)
+    plot_simulation(args.t, args.output)

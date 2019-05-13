@@ -1,0 +1,42 @@
+EXPERIMENT:
+  COMPILE: false
+SIMULATION:
+  TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
+  PREFERENCES: SimuEvol/data/preferences/gal4_5000_50.prefs
+  NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
+  PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
+  MUTATION_RATE_PER_GENERATION: 1.0e-8
+  ROOT_AGE: 300e6
+  GENERATION_TIME: 20
+  BETA: 1.0
+  EXON_SIZE: 100
+  SEED: 0
+  BRANCH_WISE_CORRELATION: false
+  FIXED_POP_SIZES: false
+  FIXED_MUT_RATE: false
+  FIXED_GENERATION_TIME: false
+SimuDiv:
+  NBR_GRID_STEP: 100
+SimuPoly:
+  POP_SIZE: 5000
+  SAMPLE_SIZE: 20
+INFERENCE_REPLICATE:
+  CHAINS: [1, 2]
+  POLYMORPHISM: [false]
+  MODELS: [node, aa]
+  SIMULATORS: [SimuPoly, SimuDiv]
+INFERENCE:
+  RESTART: false
+  POINTS: 1000
+  PRECISION: 10
+  NCAT: 30
+INFERENCE_NODE:
+  TRAITS: true
+  CLAMP_PREFERENCES: false
+  CLAMP_GENERATION_TIME: false
+  CLAMP_POP_SIZES: false
+  CLAMP_NUC_MATRIX: false
+  CLAMP_CORR_MATRIX: false
+  ARITHMETIC: false
+PLOT:
+  BURN_IN: 30

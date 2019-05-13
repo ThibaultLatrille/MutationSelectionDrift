@@ -6,11 +6,20 @@
 
 *~
 .snakemake/
-Experiments/
+Data*/Experiments/*
+DataOrthoMam/singlegene_alignments
+orthomam.tsv
+*.fa
+*.bestTree
+*.phy
+*.rootedtree
+*.taxons.nhx
+*.tree
 .idea/
 /bayescode
 /SimuEvol
 /notebooks
+/Figures
 /qsub
 *.pyc
 *.aux
@@ -29,4 +38,5 @@ Experiments/
 *.bbl
 *.blg
 *.contdiff
+
 /Human_HBA1_orthologues.*
