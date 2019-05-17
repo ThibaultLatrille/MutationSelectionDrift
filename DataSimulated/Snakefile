@@ -52,8 +52,8 @@ INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
 INFERENCE_NODE_PARAMS = " "
 if config['INFERENCE_NODE']['CLAMP_PREFERENCES']:
     INFERENCE_NODE_PARAMS += ' --profiles ' + copy_params(EXPERIMENT, ROOT, PREFERENCES)
-if config['INFERENCE_NODE']['CLAMP_GENERATION_TIME']:
-    INFERENCE_NODE_PARAMS += ' --clamp_gen_time'
+if config['INFERENCE_NODE']['MOVE_ROOT_POP_SIZE']:
+    INFERENCE_NODE_PARAMS += ' --move_root_pop_size'
 if config['INFERENCE_NODE']['CLAMP_POP_SIZES']:
     INFERENCE_NODE_PARAMS += ' --clamp_pop_sizes'
 if config['INFERENCE_NODE']['CLAMP_NUC_MATRIX']:
@@ -103,6 +103,13 @@ rule make_simuevol:
     params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/std.SimuEvol.stdout', err=EXPERIMENT + '/std.SimuEvol.stderr'
     shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
+
+rule build:
+    input:
+         expand(EXPERIMENT + '/{model}mutsel', model=INFERENCE_MODELS),
+         expand(EXPERIMENT + '/read{model}mutsel', model=INFERENCE_MODELS),
+         EXPERIMENT + '/SimuDiv',
+         EXPERIMENT + '/SimuPoly'
 
 rule run_simulation:
     output: touch(EXPERIMENT + '/{simumode}_exp')
@@ -158,6 +165,9 @@ else:
              err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
         shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.node}{params.traits} {output} 2> {log.err} 1> {log.out}'
 
+rule inference:
+    input: expand(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
+
 rule plot_traces:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_traces')
     input:
@@ -203,6 +213,29 @@ rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
     input:
          expand(EXPERIMENT + '/inference_{simumode}_{model}_profiles', simumode=INFERENCE_SIMULATORS, model=INFERENCE_MODELS)
+
+rule run_inference_second_pass:
+    output: touch(EXPERIMENT + '/second_pass_{simumode}_{polymorphism}_{chain}_run')
+    input:
+         exec=EXPERIMENT + '/nodemutsel',
+         simu=rules.run_simulation.output,
+         all_profiles=EXPERIMENT + '/inference_{simumode}_aa_profiles',
+         profiles=EXPERIMENT + '/{simumode}_aa_{polymorphism}_{chain}_read.siteprofiles',
+         config=EXPERIMENT + '/config.INFERENCE'
+    params:
+         time="4-00:00", mem=5000, threads=1,
+         poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
+         prefs=lambda w: EXPERIMENT + '/inference_{simumode}_aa_profiles/{simumode}_aa_{polymorphism}_{chain}_read.prefs' ,
+         traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if config['INFERENCE_NODE']['TRAITS'] else ""
+    benchmark: EXPERIMENT + "/benchmarks.inference.second_pass_{simumode}_{polymorphism}_{chain}_run.tsv"
+    log:
+         out=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stdout',
+         err=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stderr'
+    shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{INFERENCE_NODE_PARAMS}{params.traits} --profiles {params.prefs} {output} 2> {log.err} 1> {log.out}'
+
+rule second_pass:
+    output: touch(EXPERIMENT + '/second_pass')
+    input: expand(EXPERIMENT + '/second_pass_{simumode}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
 
 rule read_trees:
     output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read')

@@ -9,7 +9,7 @@ import os
 
 
 def plot_simulation(input_simu, args_output):
-    t = Tree(input_simu, format=3)
+    t = Tree(input_simu, format=1)
 
     nodes_file = input_simu.replace(".nhx", ".nodes.tsv")
     if os.path.isfile(nodes_file):

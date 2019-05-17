@@ -1,6 +1,5 @@
 #!python3
 from itertools import chain
-from math import floor
 import numpy as np
 import statsmodels.api as sm
 import matplotlib
@@ -30,7 +29,7 @@ def convertible_to_float(f):
 
 def to_float(f):
     c = float(f)
-    if np.isnan(c):
+    if np.isnan(c) or np.isinf(c):
         return 0.0
     else:
         return c
@@ -81,7 +80,7 @@ def plot_correlation(name, axis_dict, err_dict, color_map):
     for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
         for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
             ax = axs[row][col]
-            cm = plt.cm.get_cmap('RdYlBu')
+            cm = plt.cm.get_cmap('Spectral_r')
             if col == 0:
                 ax.set_ylabel(row_filename)
             if row == len(axis_dict) - 1:
@@ -136,24 +135,19 @@ def plot_correlation(name, axis_dict, err_dict, color_map):
     plt.close('all')
 
 
-def round_sig(x, sig=2):
-    return round(x, sig - int(floor(np.log10(abs(x)))) - 1)
-
-
-def to_coord(x, y, xmin, xmax, ymin, ymax, plt_xmin, plt_ymin, plt_width, plt_height):
-    x = (x - xmin) / (xmax - xmin) * plt_width + plt_xmin
-    y = (y - ymin) / (ymax - ymin) * plt_height + plt_ymin
-    return x, y
-
-
-def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_width=0.5, hz_line_width=0.2,
+def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_width=0.5, hz_line_width=0.2,
               max_circle_size=20, min_circle_size=4):
     node_list = tree.iter_descendants(strategy='postorder')
     node_list = chain(node_list, [tree])
 
     vlinec, vlines, vblankline, hblankline, nodes, nodex, nodey = [], [], [], [], [], [], []
 
-    fig = plt.figure(figsize=(16, 9))
+    if len(tree) < 50:
+        fig = plt.figure(figsize=(16, 9))
+    elif len(tree) < 70:
+        fig = plt.figure(figsize=(16, 12))
+    else:
+        fig = plt.figure(figsize=(16, 16))
     ax = fig.add_subplot(111)
 
     min_annot_list = [float(getattr(n, feature + "_min")) for n in tree.iter_leaves() if feature + "_min" in n.features]
@@ -168,7 +162,7 @@ def plot_tree(tree, feature, outputpath, font_size=15, line_type="-", vt_line_wi
     else:
         max_annot = max(float(getattr(n, feature)) for n in tree.iter_leaves() if feature in n.features)
 
-    cmap = plt.get_cmap("Spectral")
+    cmap = plt.get_cmap("Spectral_r")
     color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=cmap)
 
     node_pos = dict((n2, i) for i, n2 in enumerate(tree.get_leaves()[::-1]))

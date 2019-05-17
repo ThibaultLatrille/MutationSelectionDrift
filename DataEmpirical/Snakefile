@@ -39,6 +39,11 @@ rule bayescode_model:
     shell:
          'cd {ROOT}/bayescode && cp _build/{wildcards.model}mutsel {EXPERIMENT} && cp _build/read{wildcards.model}mutsel {EXPERIMENT}'
 
+rule build:
+    input:
+         expand(EXPERIMENT + '/{model}mutsel', model=INFERENCE_MODELS),
+         expand(EXPERIMENT + '/read{model}mutsel', model=INFERENCE_MODELS)
+
 rule run_inference:
     output: touch(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run')
     input:
@@ -50,6 +55,9 @@ rule run_inference:
     benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
     shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
+
+rule inference:
+    input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
 
 rule plot_traces:
     output: plot=directory(EXPERIMENT + '/inference_traces')

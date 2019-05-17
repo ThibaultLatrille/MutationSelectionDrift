@@ -17,6 +17,7 @@ orthomam.tsv
 *.tree
 .idea/
 /bayescode
+/Experiments
 /SimuEvol
 /notebooks
 /Figures

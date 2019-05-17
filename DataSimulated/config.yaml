@@ -2,7 +2,7 @@ EXPERIMENT:
   COMPILE: false
 SIMULATION:
   TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
-  PREFERENCES: SimuEvol/data/preferences/gal4_5000_50.prefs
+  PREFERENCES: SimuEvol/data/preferences/gal4_5000_30.prefs
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
   PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
   MUTATION_RATE_PER_GENERATION: 1.0e-8
@@ -10,7 +10,7 @@ SIMULATION:
   GENERATION_TIME: 20
   BETA: 1.0
   EXON_SIZE: 100
-  SEED: 0
+  SEED: 653
   BRANCH_WISE_CORRELATION: false
   FIXED_POP_SIZES: false
   FIXED_MUT_RATE: false
@@ -32,8 +32,8 @@ INFERENCE:
   NCAT: 30
 INFERENCE_NODE:
   TRAITS: true
+  MOVE_ROOT_POP_SIZE: false
   CLAMP_PREFERENCES: false
-  CLAMP_GENERATION_TIME: false
   CLAMP_POP_SIZES: false
   CLAMP_NUC_MATRIX: false
   CLAMP_CORR_MATRIX: false
