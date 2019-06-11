@@ -19,6 +19,19 @@ LIGHTGREEN = "#6ABD9B"
 GREEN = "#8FB03E"
 
 
+def NucToColor(nuc):
+    if nuc == "A":
+        return RED
+    elif nuc == "C":
+        return YELLOW
+    elif nuc == "G":
+        return GREEN
+    elif nuc == "T":
+        return BLUE
+    else:
+        return LIGHTGREEN
+
+
 def convertible_to_float(f):
     try:
         float(f)

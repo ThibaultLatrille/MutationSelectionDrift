@@ -1,0 +1,71 @@
+import os
+ROOT = os.path.abspath('..')
+
+import sys
+sys.path.append(ROOT)
+from scripts.snakemake_module import *
+
+CONFIG_FOLDER = os.path.abspath('.')
+EXPERIMENT = CONFIG_FOLDER + "/Experiment"
+
+configfile: open_config(CONFIG_FOLDER, 'config.yaml')
+
+COMPILE = config['EXPERIMENT']['COMPILE']
+TREE = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['TREE'])
+PREFERENCES = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PREFERENCES'])
+
+# Parameters for the simulation
+SIMULATION_PARAMS = '--newick ' + TREE
+SIMULATION_PARAMS += ' --preferences ' + PREFERENCES
+SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['NUC_MATRIX'])
+SIMULATION_PARAMS += ' --precision_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PRECISION_MATRIX'])
+SIMULATION_PARAMS += ' --mutation_rate_per_generation {0}'.format(config['SIMULATION']['MUTATION_RATE_PER_GENERATION'])
+SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
+SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
+SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
+SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE'])
+SIMULATION_PARAMS += ' --seed {0}'.format(config['SIMULATION']['SEED'])
+if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
+    SIMULATION_PARAMS += ' --branch_wise_correlation'
+if config['SIMULATION']['FIXED_POP_SIZES']:
+    SIMULATION_PARAMS += ' --fix_pop_size'
+if config['SIMULATION']['FIXED_MUT_RATE']:
+    SIMULATION_PARAMS += ' --fix_mut_rate'
+if config['SIMULATION']['FIXED_GENERATION_TIME']:
+    SIMULATION_PARAMS += ' --fix_gen_time'
+
+for program in ['SimuEvol']:
+    diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
+
+rule all:
+    input:
+         EXPERIMENT + '/result.svg'
+
+rule make_simuevol:
+    output:
+          EXPERIMENT + '/SimuDiv'
+    input:
+         dir=EXPERIMENT + '/SimuEvol.version',
+         config=CONFIG_FOLDER + '/config.SIMULATION'
+    params: compile="&& make clean && make" if COMPILE else ""
+    log: out=EXPERIMENT + '/std.SimuEvol.stdout', err=EXPERIMENT + '/std.SimuEvol.stderr'
+    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
+
+rule run_simulation:
+    output: touch(EXPERIMENT + '/SimuDiv_exp')
+    input:
+         exec=EXPERIMENT + '/SimuDiv',
+         config=CONFIG_FOLDER + '/config.SIMULATION'
+    benchmark: EXPERIMENT + "/benchmarks.simulation.SimuDiv.tsv"
+    log: out=EXPERIMENT + '/std.SimuDiv_exp.stdout', err=EXPERIMENT + '/std.SimuDiv_exp.stderr'
+    shell: '{input.exec} {SIMULATION_PARAMS} --output {output} 2> {log.err} 1> {log.out}'
+
+rule plot_substitutions:
+    output: plot=EXPERIMENT + '/result.svg'
+    input:
+         src=ROOT + "/scripts/plot_substitutions.py",
+         simu=rules.run_simulation.output
+    log:
+         out=EXPERIMENT + '/std.SimuDiv_plot.stdout',
+         err=EXPERIMENT + '/std.SimuDiv_plot.stderr'
+    shell: 'python3 {input.src} --tree {input.simu}.nhx --output {output.plot} --species {CONFIG_FOLDER}/species.tsv'

@@ -15,25 +15,25 @@ def plot_trace(input_trace, output_plot, burn_in):
 
     for filepath in input_trace:
         filenames.append(os.path.basename(filepath))
-        for param, vals in pd.read_csv(filepath + '.trace', sep='\t').items():
-            if param not in traces:
-                traces[param] = dict()
-            traces[param][os.path.basename(filepath)] = vals
+        for x_param, vals in pd.read_csv(filepath + '.trace', sep='\t').items():
+            if x_param not in traces:
+                traces[x_param] = dict()
+            traces[x_param][os.path.basename(filepath)] = vals
 
-    for param, traces_param in traces.items():
+    for x_param, x_traces_param in traces.items():
         plt.figure(figsize=(1920 / my_dpi, 1080 / my_dpi), dpi=my_dpi)
-        for filename, param_trace in sorted(traces_param.items(), key=lambda x: x[0]):
+        for x_filename, x_param_trace in sorted(x_traces_param.items(), key=lambda x: x[0]):
             style = "-"
-            if "False" in filename:
+            if "False" in x_filename:
                 style = "--"
-            plt.plot(range(len(param_trace)), param_trace, style, alpha=0.5, linewidth=1, label=filename)
+            plt.plot(range(len(x_param_trace)), x_param_trace, style, alpha=0.5, linewidth=1, label=x_filename)
 
         plt.axvline(x=burn_in, ymin=0.0, ymax=1.0, color='grey')
         plt.xlabel('Point')
-        plt.ylabel(param)
+        plt.ylabel(x_param)
         plt.legend()
         plt.tight_layout()
-        plt.savefig('{0}/trace.{1}.svg'.format(output_plot, param), format='svg')
+        plt.savefig('{0}/trace.{1}.svg'.format(output_plot, x_param), format='svg')
         plt.clf()
         plt.close('all')
 

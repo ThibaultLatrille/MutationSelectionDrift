@@ -1,0 +1,17 @@
+EXPERIMENT:
+  COMPILE: false
+SIMULATION:
+  TREE: Animation/species.nwk.annotated
+  PREFERENCES: Animation/cds.prefs
+  NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
+  PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
+  MUTATION_RATE_PER_GENERATION: 0.5
+  ROOT_AGE: 1.0
+  GENERATION_TIME: 1.0
+  BETA: 0.5
+  EXON_SIZE: 100
+  SEED: 468
+  BRANCH_WISE_CORRELATION: true
+  FIXED_POP_SIZES: true
+  FIXED_MUT_RATE: true
+  FIXED_GENERATION_TIME: true

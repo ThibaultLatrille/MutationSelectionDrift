@@ -5,9 +5,10 @@
 #   git config --global core.excludesfile '~/.gitignore_global'
 
 *~
-.snakemake/
-Data*/Experiments/*
+Animation/Experiment/*
+Animation/.snakemake
 DataEmpirical/OrthoMam/singlegene_alignments
+Data*/Experiments/*
 orthomam.tsv
 *.fa
 *.bestTree
@@ -17,11 +18,9 @@ orthomam.tsv
 *.tree
 .idea/
 /bayescode
-/Experiments
 /SimuEvol
 /notebooks
 /Figures
-/qsub
 *.pyc
 *.aux
 *.log
@@ -39,5 +38,3 @@ orthomam.tsv
 *.bbl
 *.blg
 *.contdiff
-
-/Human_HBA1_orthologues.*
