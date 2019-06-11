@@ -23,7 +23,7 @@ assert (PLOT_BURN_IN < config['INFERENCE']['POINTS'])
 for program in ['bayescode']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, bayescode_model, plot_profiles, plot_traces, plot_trees, read_profiles, read_trees
+localrules: all, all_profiles, bayescode_model, plot_profiles, plot_traces, plot_trees, read_profiles, read_trees
 
 rule all:
     input:
@@ -52,9 +52,10 @@ rule run_inference:
     params:
           time="4-00:00", mem=5000, threads=1,
           poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
+          traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if w.model == "node" and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
     benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly} {output} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.traits} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
