@@ -35,6 +35,7 @@ if config['SIMULATION']['FIXED_GENERATION_TIME']:
 
 SIMUPOLY_PARAMS = '--population_size {0}'.format(config['SimuPoly']['POP_SIZE'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
+SIMUPOLY_PARAMS += ' --white_noise {0}'.format(config['SimuPoly']['WHITE_NOISE'])
 
 SIMUDIV_PARAMS = '--nbr_grid_step {0}'.format(config['SimuDiv']['NBR_GRID_STEP'])
 
@@ -71,7 +72,7 @@ INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 for program in ['bayescode', 'SimuEvol']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
+localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
 
 rule all:
     input:
@@ -132,14 +133,27 @@ rule plot_simulation:
     log:
          out=EXPERIMENT + '/std.{simumode}_plot.stdout',
          err=EXPERIMENT + '/std.{simumode}_plot.stderr'
-    shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot} '
+    shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot}'
+
+rule draw_fossils:
+    output: EXPERIMENT + "/{simumode}_exp.fossils.tsv.drawn"
+    input:
+         simu=rules.run_simulation.output,
+         config=EXPERIMENT + '/config.INFERENCE_NODE'
+    run:
+        import pandas as pd
+        seed = 6584
+        df = pd.read_csv(input.simu[0] + ".fossils.tsv", sep="\t")
+        df = df.sample(n=min(config['INFERENCE_NODE']['FOSSILS'], df.shape[0]), random_state=seed)
+        df.to_csv(input.simu[0] + ".fossils.tsv.drawn", sep="\t", index=False)
 
 if config['INFERENCE']['RESTART']:
     rule run_inference:
         output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run')
         input:
              exec=rules.bayescode_model.output.model,
-             simu=rules.run_simulation.output
+             simu=rules.run_simulation.output,
+             fossils=rules.draw_fossils.output
         params:
              time="4-00:00", mem=5000, threads=1,
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
@@ -153,17 +167,19 @@ else:
         input:
              exec=rules.bayescode_model.output.model,
              simu=rules.run_simulation.output,
+             fossils=rules.draw_fossils.output,
              config=EXPERIMENT + '/config.INFERENCE'
         params:
              time="4-00:00", mem=5000, threads=1,
              poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
              node=lambda w: INFERENCE_NODE_PARAMS if w.model == "node" else "",
-             traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['TRAITS']) else ""
+             traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['TRAITS']) else "",
+             fossils=lambda w, input: " --fossils {0}.fossils.tsv.drawn".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['FOSSILS'] > 0) else ""
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
         log:
              out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
              err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
-        shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.node}{params.traits} {output} 2> {log.err} 1> {log.out}'
+        shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.node}{params.traits}{params.fossils} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
