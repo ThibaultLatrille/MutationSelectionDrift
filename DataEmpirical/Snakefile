@@ -10,8 +10,8 @@ EXPERIMENT = os.path.abspath('.')
 configfile: open_config(EXPERIMENT, 'config.yaml')
 
 INFERENCE_PARAMS = ' -u {0}'.format(config['INFERENCE']['POINTS'])
-INFERENCE_PARAMS += ' --precision {0}'.format(config['INFERENCE']['PRECISION'])
-INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
+MUTSEL_PARAMS = ' --precision {0}'.format(config['INFERENCE']['PRECISION'])
+MUTSEL_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
 
 INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
 INFERENCE_MODELS = config['INFERENCE_REPLICATE']['MODELS']
@@ -29,7 +29,7 @@ rule all:
     input:
          EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/inference_traces',
-         EXPERIMENT + '/inference_node_trees'
+         expand(EXPERIMENT + '/inference_{model}_trees', model=[i for i in INFERENCE_MODELS if "node" in i])
 
 rule bayescode_model:
     output:
@@ -51,11 +51,12 @@ rule run_inference:
          config=EXPERIMENT + '/config.INFERENCE'
     params:
           time="4-00:00", mem=5000, threads=1,
+          mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
           poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
-          traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if w.model == "node" and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
+          traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
     benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.traits} {output} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.traits} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
@@ -98,7 +99,7 @@ rule plot_profiles:
 rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
     input:
-         expand(EXPERIMENT + '/inference_{model}_profiles', model=INFERENCE_MODELS)
+         expand(EXPERIMENT + '/inference_{model}_profiles', model=[i for i in INFERENCE_MODELS if ("aa" == i or "node" == i)])
 
 rule read_trees:
     output: touch(EXPERIMENT + '/{model}_{polymorphism}_{chain}_read')
