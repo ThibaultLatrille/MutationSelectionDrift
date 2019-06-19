@@ -15,6 +15,8 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
         for tree_path in sorted(glob("{0}.*.nhx".format(filepath))):
             feature = tree_path.replace(filepath + ".", "").replace(".nhx", "")
             filename = os.path.basename(filepath)
+            if tree_path.count(" ") > 0:
+                continue
             tree = Tree(tree_path, format=1)
 
             if simu_tree:

@@ -30,8 +30,8 @@ for v in tax_list:
         print(row)
     print()
 
-pd.DataFrame(filtered_rows, columns=(["TaxonName"] + cols)).to_csv("life_history_traits.tsv", na_rep="NaN", sep='\t',
-                                                                   index=False)
+pd.DataFrame(filtered_rows, columns=(["TaxonName"] + [i.replace(" ", "_") for i in cols])).to_csv(
+    "life_history_traits.tsv", na_rep="NaN", sep='\t', index=False)
 print("{0} species with at least one life history trait saved in file 'life_history_traits.tsv'.".format(
     len(filtered_rows)))
 

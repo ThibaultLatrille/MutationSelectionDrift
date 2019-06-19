@@ -119,7 +119,7 @@ rule run_simulation:
          config_core=EXPERIMENT + '/config.SIMULATION',
          config_pan=EXPERIMENT + '/config.' + '{simumode}'
     params:
-          time="0-23:00", mem=5000, threads=1,
+          time="1-23:00", mem=300, threads=1,
           pan=lambda w: SIMULATION_SIMUMODE_PARAM[w.simumode]
     benchmark: EXPERIMENT + "/benchmarks.simulation.{simumode}.tsv"
     log: out=EXPERIMENT + '/std.{simumode}_exp.stdout', err=EXPERIMENT + '/std.{simumode}_exp.stderr'
@@ -155,7 +155,7 @@ if config['INFERENCE']['RESTART']:
              simu=rules.run_simulation.output,
              fossils=rules.draw_fossils.output
         params:
-             time="4-00:00", mem=5000, threads=1,
+             time="4-23:00", mem=1500, threads=1,
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
         log:
              out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
@@ -170,7 +170,7 @@ else:
              fossils=rules.draw_fossils.output,
              config=EXPERIMENT + '/config.INFERENCE'
         params:
-             time="4-00:00", mem=5000, threads=1,
+             time="4-23:00", mem=1500, threads=1,
              poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
              node=lambda w: INFERENCE_NODE_PARAMS if w.model == "node" else "",
              traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['TRAITS']) else "",
