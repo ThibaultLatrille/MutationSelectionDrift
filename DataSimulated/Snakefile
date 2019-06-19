@@ -35,7 +35,8 @@ if config['SIMULATION']['FIXED_GENERATION_TIME']:
 
 SIMUPOLY_PARAMS = '--population_size {0}'.format(config['SimuPoly']['POP_SIZE'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
-SIMUPOLY_PARAMS += ' --white_noise {0}'.format(config['SimuPoly']['WHITE_NOISE'])
+SIMUPOLY_PARAMS += ' --noise_sigma {0}'.format(config['SimuPoly']['NOISE_SIGMA'])
+SIMUPOLY_PARAMS += ' --noise_theta {0}'.format(config['SimuPoly']['NOISE_THETA'])
 
 SIMUDIV_PARAMS = '--nbr_grid_step {0}'.format(config['SimuDiv']['NBR_GRID_STEP'])
 
