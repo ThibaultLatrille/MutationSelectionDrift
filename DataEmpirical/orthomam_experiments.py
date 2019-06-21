@@ -25,14 +25,14 @@ def export_ali(filepath, ali_dict):
         ali_file.write("\n".join([" ".join(id_seq) for id_seq in ali_dict.items()]))
 
 
-def create_experiment(exons, replicate, tree_name):
+def create_experiment(name, exons, replicate, tree_name, cds_list):
     ortho_path = os.getcwd() + "/OrthoMam"
-    genes = pd.read_csv(ortho_path + "/filtered.list")
+    genes = pd.read_csv("{0}/{1}".format(ortho_path, cds_list))
     tree = Tree("{0}/{1}.rootedtree.nhx".format(ortho_path, tree_name), format=3)
     print("{0} leaves for the rooted tree".format(len(tree)))
 
     for rep in range(replicate):
-        experiment = "OrthoMam_{3}_Exons{0}_Replicates{1}_Id{2}".format(exons, replicate, rep, tree_name)
+        experiment = "{0}_{1}_{2}_Exons{3}_Replicates{4}_Id{5}".format(name, tree_name, cds_list, exons, replicate, rep)
         exp_path = os.getcwd() + '/Experiments/' + experiment
         os.makedirs(exp_path, exist_ok=True)
         os.system('cp config.yaml {0}'.format(exp_path))
@@ -85,8 +85,10 @@ def create_experiment(exons, replicate, tree_name):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-n', '--name', required=False, type=str, default="OrthoMam", dest="name")
     parser.add_argument('-t', '--tree', required=False, type=str, default="placnr", dest="tree")
-    parser.add_argument('-e', '--exons', required=False, type=int, default=10, dest="exons")
-    parser.add_argument('-r', '--replicate', required=False, type=int, default=10, dest="replicate")
+    parser.add_argument('-l', '--cds', required=False, type=str, default="filtered.list", dest="cds")
+    parser.add_argument('-e', '--exons', required=False, type=int, default=6, dest="exons")
+    parser.add_argument('-r', '--replicate', required=False, type=int, default=6, dest="replicate")
     args = parser.parse_args()
-    create_experiment(args.exons, args.replicate, args.tree)
+    create_experiment(args.name, args.exons, args.replicate, args.tree, args.cds)
