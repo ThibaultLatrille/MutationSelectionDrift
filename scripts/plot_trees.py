@@ -8,16 +8,19 @@ from ete3 import Tree
 from plot_module import plot_correlation, plot_tree, to_float
 
 
+def remove_units(str):
+    return str.replace("(g)", "").replace("(days)", "").replace("(yrs)", "")
+
+
 def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, simu_tree):
     axis_trees, axis_filenames = dict(), dict()
 
     for filepath in input_trace:
         for tree_path in sorted(glob("{0}.*.nhx".format(filepath))):
-            feature = tree_path.replace(filepath + ".", "").replace(".nhx", "")
+            feature = remove_units(tree_path.replace(filepath + ".", "").replace(".nhx", ""))
             filename = os.path.basename(filepath)
-            if tree_path.count(" ") > 0:
-                continue
-            tree = Tree(tree_path, format=1)
+            with open(tree_path, 'r') as tree_file:
+                tree = Tree(remove_units(tree_file.readline()), format=1)
 
             if simu_tree:
                 for n_inf, n_simu in zip(tree.traverse(), simu_tree.traverse()):

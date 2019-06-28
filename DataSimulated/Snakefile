@@ -11,17 +11,18 @@ configfile: open_config(EXPERIMENT, 'config.yaml')
 
 COMPILE = config['EXPERIMENT']['COMPILE']
 TREE = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['TREE'])
-PREFERENCES = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PREFERENCES'])
+if config['SIMULATION']['PREFERENCES'] == "SimuFold":
+    PREFERENCES = EXPERIMENT + '/SimuFold_exp.equilibrium.prefs'
+else:
+    PREFERENCES = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PREFERENCES'])
 
 # Parameters for the simulation
 SIMULATION_PARAMS = '--newick ' + TREE
-SIMULATION_PARAMS += ' --preferences ' + PREFERENCES
 SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['NUC_MATRIX'])
 SIMULATION_PARAMS += ' --precision_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PRECISION_MATRIX'])
 SIMULATION_PARAMS += ' --mutation_rate_per_generation {0}'.format(config['SIMULATION']['MUTATION_RATE_PER_GENERATION'])
 SIMULATION_PARAMS += ' --root_age {0}'.format(config['SIMULATION']['ROOT_AGE'])
 SIMULATION_PARAMS += ' --generation_time {0}'.format(config['SIMULATION']['GENERATION_TIME'])
-SIMULATION_PARAMS += ' --beta {0}'.format(config['SIMULATION']['BETA'])
 SIMULATION_PARAMS += ' --exon_size {0}'.format(config['SIMULATION']['EXON_SIZE'])
 SIMULATION_PARAMS += ' --seed {0}'.format(config['SIMULATION']['SEED'])
 if config['SIMULATION']['BRANCH_WISE_CORRELATION']:
@@ -34,13 +35,22 @@ if config['SIMULATION']['FIXED_GENERATION_TIME']:
     SIMULATION_PARAMS += ' --fix_gen_time'
 
 SIMUPOLY_PARAMS = '--population_size {0}'.format(config['SimuPoly']['POP_SIZE'])
+SIMUPOLY_PARAMS += ' --beta {0}'.format(config['SimuPoly']['BETA'])
 SIMUPOLY_PARAMS += ' --sample_size {0}'.format(config['SimuPoly']['SAMPLE_SIZE'])
 SIMUPOLY_PARAMS += ' --noise_sigma {0}'.format(config['SimuPoly']['NOISE_SIGMA'])
 SIMUPOLY_PARAMS += ' --noise_theta {0}'.format(config['SimuPoly']['NOISE_THETA'])
+SIMUPOLY_PARAMS += ' --preferences ' + PREFERENCES
 
 SIMUDIV_PARAMS = '--nbr_grid_step {0}'.format(config['SimuDiv']['NBR_GRID_STEP'])
+SIMUDIV_PARAMS += ' --beta {0}'.format(config['SimuDiv']['BETA'])
+SIMUDIV_PARAMS += ' --preferences ' + PREFERENCES
 
-SIMULATION_SIMUMODE_PARAM = {"SimuDiv": SIMUDIV_PARAMS, "SimuPoly": SIMUPOLY_PARAMS}
+SIMUFOLD_PARAMS = '--nbr_grid_step {0}'.format(config['SimuFold']['NBR_GRID_STEP'])
+SIMUFOLD_PARAMS += ' --population_size {0}'.format(config['SimuFold']['POP_SIZE'])
+SIMUFOLD_PARAMS += ' --pdb_folder {0}/{1}'.format(ROOT, config['SimuFold']['PDB_FOLDER'])
+SIMUFOLD_PARAMS += ' --nbr_exons {0}'.format(config['SimuFold']['NBR_EXONS'])
+
+SIMULATION_SIMUMODE_PARAM = {"SimuDiv": SIMUDIV_PARAMS, "SimuPoly": SIMUPOLY_PARAMS, "SimuFold": SIMUFOLD_PARAMS}
 
 PLOT_BURN_IN = config['PLOT']['BURN_IN']
 
@@ -53,7 +63,7 @@ INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
 
 INFERENCE_NODE_PARAMS = " "
 if config['INFERENCE_NODE']['CLAMP_PREFERENCES']:
-    INFERENCE_NODE_PARAMS += ' --profiles ' + copy_params(EXPERIMENT, ROOT, PREFERENCES)
+    INFERENCE_NODE_PARAMS += ' --profiles ' + PREFERENCES
 if config['INFERENCE_NODE']['MOVE_ROOT_POP_SIZE']:
     INFERENCE_NODE_PARAMS += ' --move_root_pop_size'
 if config['INFERENCE_NODE']['CLAMP_POP_SIZES']:
@@ -73,7 +83,7 @@ INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 for program in ['bayescode', 'SimuEvol']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
+localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, init_simulation, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
 
 rule all:
     input:
@@ -100,25 +110,40 @@ rule bayescode_model:
 rule make_simuevol:
     output:
           EXPERIMENT + '/SimuDiv',
+          EXPERIMENT + '/SimuFold',
           EXPERIMENT + '/SimuPoly'
     input: dir=EXPERIMENT + '/SimuEvol.version'
     params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/std.SimuEvol.stdout', err=EXPERIMENT + '/std.SimuEvol.stderr'
-    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
+    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT} && cp build/SimuFold {EXPERIMENT}'
 
 rule build:
     input:
          expand(EXPERIMENT + '/{model}mutsel', model=INFERENCE_MODELS),
          expand(EXPERIMENT + '/read{model}mutsel', model=INFERENCE_MODELS),
          EXPERIMENT + '/SimuDiv',
+         EXPERIMENT + '/SimuFold',
          EXPERIMENT + '/SimuPoly'
+
+if config['SIMULATION']['PREFERENCES'] == "SimuFold":
+    rule init_simulation:
+        output: PREFERENCES
+        input:
+              exec=EXPERIMENT + '/SimuFold',
+              config_core=EXPERIMENT + '/config.SIMULATION',
+              config_pan=EXPERIMENT + '/config.SimuFold'
+        params:
+              pan=SIMULATION_SIMUMODE_PARAM["SimuFold"]
+        log: out=EXPERIMENT + '/std.init_SimuFold_exp.stdout', err=EXPERIMENT + '/std.init_SimuFold_exp.stderr'
+        shell: '{input.exec} {SIMULATION_PARAMS} {params.pan} --initialisation --output {EXPERIMENT}/SimuFold_exp 2> {log.err} 1> {log.out}'
 
 rule run_simulation:
     output: touch(EXPERIMENT + '/{simumode}_exp')
     input:
          exec=EXPERIMENT + '/{simumode}',
          config_core=EXPERIMENT + '/config.SIMULATION',
-         config_pan=EXPERIMENT + '/config.' + '{simumode}'
+         config_pan=EXPERIMENT + '/config.' + '{simumode}',
+         prefs=PREFERENCES
     params:
           time="1-23:00", mem=300, threads=1,
           pan=lambda w: SIMULATION_SIMUMODE_PARAM[w.simumode]
