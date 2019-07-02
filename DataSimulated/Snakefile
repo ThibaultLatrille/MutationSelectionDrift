@@ -49,6 +49,8 @@ SIMUFOLD_PARAMS = '--nbr_grid_step {0}'.format(config['SimuFold']['NBR_GRID_STEP
 SIMUFOLD_PARAMS += ' --population_size {0}'.format(config['SimuFold']['POP_SIZE'])
 SIMUFOLD_PARAMS += ' --pdb_folder {0}/{1}'.format(ROOT, config['SimuFold']['PDB_FOLDER'])
 SIMUFOLD_PARAMS += ' --nbr_exons {0}'.format(config['SimuFold']['NBR_EXONS'])
+if 'CUT_OFF' in config['SimuFold']:
+    SIMUFOLD_PARAMS += ' --cut_off {0}'.format(config['SimuFold']['CUT_OFF'])
 
 SIMULATION_SIMUMODE_PARAM = {"SimuDiv": SIMUDIV_PARAMS, "SimuPoly": SIMUPOLY_PARAMS, "SimuFold": SIMUFOLD_PARAMS}
 
