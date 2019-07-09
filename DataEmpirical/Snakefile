@@ -6,6 +6,8 @@ sys.path.append(ROOT)
 from scripts.snakemake_module import *
 
 EXPERIMENT = os.path.abspath('.')
+CORRELATION = EXPERIMENT + "/CorrelationMatrices"
+os.makedirs(CORRELATION, exist_ok=True)
 
 configfile: open_config(EXPERIMENT, 'config.yaml')
 
@@ -27,7 +29,7 @@ localrules: all, all_profiles, bayescode_model, plot_profiles, plot_traces, plot
 
 rule all:
     input:
-         EXPERIMENT + '/all_profiles',
+         # EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/inference_traces',
          EXPERIMENT + '/all_correlation_matrix',
          expand(EXPERIMENT + '/inference_{model}_trees', model=[i for i in INFERENCE_MODELS if "node" in i])
@@ -75,7 +77,7 @@ rule plot_traces:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
 
 rule plot_correlation_matrix:
-    output: plot=EXPERIMENT + '/{model}_{polymorphism}_{chain}_corr_matrix.svg'
+    output: plot=touch(CORRELATION + '/{model}_{polymorphism}_{chain}')
     input:
          src=ROOT + "/scripts/plot_correlation_matrix.py",
          trace=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run',
@@ -90,7 +92,7 @@ rule plot_correlation_matrix:
 rule all_correlation_matrix:
     output: plot=touch(EXPERIMENT + '/all_correlation_matrix')
     input:
-         trace=expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_corr_matrix.svg', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=[i for i in INFERENCE_MODELS if "node" in i])
+         trace=expand(CORRELATION + '/{model}_{polymorphism}_{chain}', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=[i for i in INFERENCE_MODELS if "node" in i])
 
 rule read_profiles:
     output: EXPERIMENT + '/{model}_{polymorphism}_{chain}_read.siteprofiles'

@@ -7,9 +7,10 @@
 *~
 Animation/Experiment/*
 Animation/.snakemake
-DataEmpirical/OrthoMam/singlegene_alignments
+DataEmpirical/*/singlegene_alignments
+DataEmpirical/*/gblocks
+DataEmpirical/*/.snakemake
 DataEmpirical/OrthoMam/SNP
-DataEmpirical/OrthoMam/.snakemake
 Data*/Experiments/*
 Data*/Analysis
 orthomam.tsv

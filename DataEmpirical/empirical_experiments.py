@@ -6,7 +6,7 @@ from subprocess import run
 
 def create_experiment(name):
     for folder in os.listdir(os.getcwd()):
-        if os.path.isdir(folder) and folder != "Experiments" and folder != "OrthoMam":
+        if os.path.isdir(folder) and os.path.isfile(folder + "/CDS.ali") and os.path.isfile(folder + "/rootedtree.nhx"):
             experiment = name + "_" + folder
             exp_path = os.getcwd() + '/Experiments/' + experiment
 

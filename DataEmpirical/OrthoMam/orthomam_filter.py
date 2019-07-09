@@ -5,7 +5,7 @@ import os
 
 
 def save_df(name, col):
-    col.to_csv("./" + name, index=False)
+    col.to_csv("./" + name, index=False, header=None)
     print("{0} CDS saved into '{1}'".format(len(col), name))
 
 
@@ -21,7 +21,7 @@ print("{0} CDS in the folder 'singlegene_alignments'.".format(len(list_folder_cd
 
 col_filtered_cds = col_pursel_cds[col_pursel_cds.isin(list_folder_cds)]
 print("{0} CDS in the folder 'singlegene_alignments' and not under positive selection.".format(len(col_filtered_cds)))
-save_df("filtered.list", col_filtered_cds)
+save_df("cds.filtered.list", col_filtered_cds)
 
 
 def coverage(filepath):
@@ -42,8 +42,8 @@ threshold = 0.99
 list_high_coverage_cds = [i for i in list_folder_cds if coverage('./singlegene_alignments/{0}.ali'.format(i)) >= threshold]
 col_filtered_high_coverage_cds = col_filtered_cds[col_filtered_cds.isin(list_high_coverage_cds)]
 print("{0} CDS are not under positive selection and with a coverage >{1}.".format(len(col_filtered_high_coverage_cds), threshold))
-save_df("filtered.highcoverage.list", col_filtered_high_coverage_cds)
+save_df("cds.filtered.highcoverage.list", col_filtered_high_coverage_cds)
 
 col_high_coverage_cds = col_orthomam_cds[col_orthomam_cds.isin(list_high_coverage_cds)]
 print("{0} CDS are with a coverage >{1}.".format(len(col_high_coverage_cds), threshold))
-save_df("highcoverage.list", col_high_coverage_cds)
+save_df("cds.highcoverage.list", col_high_coverage_cds)

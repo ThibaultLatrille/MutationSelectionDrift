@@ -25,14 +25,14 @@ def export_ali(filepath, ali_dict):
         ali_file.write("\n".join([" ".join(id_seq) for id_seq in ali_dict.items()]))
 
 
-def create_experiment(name, exons, replicate, tree_name, cds_list):
-    ortho_path = os.getcwd() + "/OrthoMam"
+def create_experiment(name, sample, replicate, tree_name, cds_list):
+    ortho_path = os.getcwd() + "/" + name
     genes = pd.read_csv("{0}/{1}".format(ortho_path, cds_list))
-    tree = Tree("{0}/{1}.rootedtree.nhx".format(ortho_path, tree_name), format=3)
+    tree = Tree("{0}/{1}".format(ortho_path, tree_name), format=3)
     print("{0} leaves for the rooted tree".format(len(tree)))
 
     for rep in range(replicate):
-        experiment = "{0}_{1}_{2}_Exons{3}_Replicates{4}_Id{5}".format(name, tree_name, cds_list, exons, replicate, rep)
+        experiment = "{0}_{1}_{2}_Sample{3}_Replicates{4}_Id{5}".format(name, tree_name, cds_list, sample, replicate, rep)
         exp_path = os.getcwd() + '/Experiments/' + experiment
         os.makedirs(exp_path, exist_ok=True)
         os.system('cp config.yaml {0}'.format(exp_path))
@@ -43,7 +43,7 @@ def create_experiment(name, exons, replicate, tree_name, cds_list):
 
         alignments = []
         taxa = set()
-        for selected in genes.sample(exons).values:
+        for selected in genes.sample(sample).values:
             alignments.append(import_ali("{0}/singlegene_alignments/{1}.ali".format(ortho_path, selected[0])))
             taxa = taxa.union(alignments[-1].keys())
 
@@ -85,10 +85,11 @@ def create_experiment(name, exons, replicate, tree_name, cds_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-n', '--name', required=False, type=str, default="OrthoMam", dest="name")
-    parser.add_argument('-t', '--tree', required=False, type=str, default="placnr", dest="tree")
-    parser.add_argument('-l', '--cds', required=False, type=str, default="filtered.list", dest="cds")
-    parser.add_argument('-e', '--exons', required=False, type=int, default=6, dest="exons")
+    parser.add_argument('-n', '--name', required=False, type=str, default="Vertebrates", dest="name")
+    # name can be one of ["Vertebrates", "47SP", "OrthoMam"]
+    parser.add_argument('-t', '--tree', required=False, type=str, default="rootedtree.nhx", dest="tree")
+    parser.add_argument('-l', '--cds', required=False, type=str, default="cds.highcoverage.list", dest="cds")
+    parser.add_argument('-s', '--sample', required=False, type=int, default=12, dest="sample")
     parser.add_argument('-r', '--replicate', required=False, type=int, default=6, dest="replicate")
     args = parser.parse_args()
-    create_experiment(args.name, args.exons, args.replicate, args.tree, args.cds)
+    create_experiment(args.name, args.sample, args.replicate, args.tree, args.cds)

@@ -4,8 +4,9 @@ for EXPERIMENT in ./DataEmpirical/Experiments/*; do
   echo "${NAME}"
   cd ${EXPERIMENT}
   snakemake --unlock
+  snakemake build
   snakemake --touch inference
-  snakemake --printshellcmds -j 6
+  snakemake --printshellcmds --rerun-incomplete -j 4
   cd ../../..
 done
 for EXPERIMENT in ./DataSimulated/Experiments/*; do
@@ -13,7 +14,8 @@ for EXPERIMENT in ./DataSimulated/Experiments/*; do
   echo "${NAME}"
   cd ${EXPERIMENT}
   snakemake --unlock
+  snakemake build
   snakemake --touch inference
-  snakemake --printshellcmds -j 6
+  snakemake --printshellcmds --rerun-incomplete -j 4
   cd ../../..
 done
