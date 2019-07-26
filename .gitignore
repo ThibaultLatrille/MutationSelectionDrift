@@ -9,6 +9,7 @@ Animation/Experiment/*
 Animation/.snakemake
 DataEmpirical/*/singlegene_alignments
 DataEmpirical/*/gblocks
+DataEmpirical/*/fasta
 DataEmpirical/*/.snakemake
 DataEmpirical/OrthoMam/SNP
 Data*/Experiments/*

@@ -39,7 +39,8 @@ def create_experiment(name, sample, replicate, tree_name, cds_list):
         os.remove(exp_path + "/Snakefile") if os.path.exists(exp_path + "/Snakefile") else None
         os.symlink(os.getcwd() + "/Snakefile", exp_path + "/Snakefile")
 
-        os.system('cp {0}/life_history_traits.tsv {1}'.format(ortho_path, exp_path))
+        if os.path.isfile('{0}/life_history_traits.tsv'.format(ortho_path)):
+            os.system('cp {0}/life_history_traits.tsv {1}'.format(ortho_path, exp_path))
 
         alignments = []
         taxa = set()
@@ -85,7 +86,7 @@ def create_experiment(name, sample, replicate, tree_name, cds_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-n', '--name', required=False, type=str, default="Vertebrates", dest="name")
+    parser.add_argument('-n', '--name', required=False, type=str, default="Isopods", dest="name")
     # name can be one of ["Vertebrates", "47SP", "OrthoMam"]
     parser.add_argument('-t', '--tree', required=False, type=str, default="rootedtree.nhx", dest="tree")
     parser.add_argument('-l', '--cds', required=False, type=str, default="cds.highcoverage.list", dest="cds")
