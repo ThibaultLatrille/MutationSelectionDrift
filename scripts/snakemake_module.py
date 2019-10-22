@@ -56,7 +56,7 @@ def print_c(txt):
 
 
 def open_yaml(yaml_path):
-    return yaml.load(open(yaml_path, 'r'))
+    return yaml.load(open(yaml_path, 'r'), Loader=yaml.FullLoader)
 
 
 def copy_params(experiment, root, param_path):

@@ -53,13 +53,14 @@ rule run_inference:
          exec=EXPERIMENT + '/{model}mutsel',
          config=EXPERIMENT + '/config.INFERENCE'
     params:
-          time="4-23:00", mem=1500, threads=1,
+          time="18-0:00", mem=1500, threads=1,
           mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
           poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
           traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
+          calibs=lambda w: ' --fossils {0}/calibs.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/calibs.tsv") else "",
     benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
     log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.traits} {output} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.traits}{params.calibs} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
@@ -132,7 +133,7 @@ rule read_trees:
     log:
        out=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stdout',
        err=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stderr'
-    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} 2> {log.err} 1> {log.out} || true'
 
 rule plot_trees:
     output: plot=directory(EXPERIMENT + '/inference_{model}_trees')

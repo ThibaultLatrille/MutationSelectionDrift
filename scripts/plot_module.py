@@ -6,7 +6,6 @@ import matplotlib
 from matplotlib.collections import LineCollection
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-
 matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -72,15 +71,15 @@ def min_max(axis, err):
         min_axis, max_axis = min(axis - err), max(axis + err)
     else:
         min_axis, max_axis = min(axis - err[0]), max(axis + err[1])
-    min_axis -= (max_axis - min_axis) * eps
-    max_axis += (max_axis - min_axis) * eps
+    # min_axis -= (max_axis - min_axis) * eps
+    # max_axis += (max_axis - min_axis) * eps
     if min_axis == max_axis:
         return min_axis - eps, max_axis + eps
     else:
         return min_axis, max_axis
 
 
-def plot_correlation(name, axis_dict, err_dict, color_map):
+def plot_correlation(name, axis_dict, err_dict, color_map, min_max_annot=(), global_xy=False):
     f, axs = plt.subplots(len(axis_dict), len(axis_dict),
                           figsize=(len(axis_dict) * 640 / my_dpi, len(axis_dict) * 480 / my_dpi), dpi=my_dpi)
 
@@ -89,32 +88,48 @@ def plot_correlation(name, axis_dict, err_dict, color_map):
 
     scatter_kwargs = {"zorder": 0}
     error_kwargs = {"lw": .5, "zorder": -1}
+    cm = plt.cm.get_cmap('Spectral_r')
+    if len(color_map) > 0:
+        if len(min_max_annot) != 0:
+            min_annot, max_annot = min(min_max_annot), max(min_max_annot)
+        else:
+            min_annot, max_annot = min(color_map), max(color_map)
+        norm = Normalize(vmin=min_annot, vmax=max_annot)
+
+    if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+        for axis in axis_dict:
+            axis_dict[axis] = np.exp(axis_dict[axis])
+            if axis in err_dict:
+                if err_dict[axis].ndim == 1:
+                    err_dict[axis] = axis_dict[axis] * (np.exp(err_dict[axis]) - 1)
+                else:
+                    err_dict[axis][0] = axis_dict[axis] * (1 - np.exp(-err_dict[axis][0]))
+                    err_dict[axis][1] = axis_dict[axis] * (np.exp(err_dict[axis][1]) - 1)
+
+    min_max_axis = {n: min_max(a, err_dict[n] if (n in err_dict) else 0.0) for n, a in axis_dict.items()}
+    if global_xy:
+        global_min = min([min(i) for i in min_max_axis.values()])
+        global_max = max([max(i) for i in min_max_axis.values()])
+        for n in min_max_axis:
+            min_max_axis[n] = (global_min, global_max)
 
     for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
         for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
             ax = axs[row][col]
-            cm = plt.cm.get_cmap('Spectral_r')
-            if col == 0:
-                ax.set_ylabel(row_filename)
-            if row == len(axis_dict) - 1:
-                ax.set_xlabel(col_filename)
-
-            min_col, max_col = min_max(col_axis, err_dict[col_filename] if (col_filename in err_dict) else 0.0)
-            ax.set_xlim((min_col, max_col))
+            ax.set_xlim(min_max_axis[col_filename])
 
             if row == col:
                 nb_bins = 50 if len(col_axis) > 100 else int(len(col_axis) / 2)
                 ax.hist(col_axis, nb_bins, density=True, color=BLUE)
             else:
-                min_row, max_row = min_max(row_axis, err_dict[row_filename] if (row_filename in err_dict) else 0.0)
-                ax.set_ylim((min_row, max_row))
+                ax.set_ylim(min_max_axis[row_filename])
 
                 if len(color_map) > 0 and len(color_map) == len(col_axis) and len(color_map) == len(row_axis):
-                    sc = ax.scatter(col_axis, row_axis, c=color_map, cmap=cm, **scatter_kwargs,
-                                    label=r"${0}$ points".format(len(row_axis)))
+                    ax.scatter(col_axis, row_axis, c=color_map, cmap=cm, norm=norm, **scatter_kwargs,
+                               label=r"${0}$ points".format(len(row_axis)))
                 else:
-                    sc = ax.scatter(col_axis, row_axis, color=BLUE, **scatter_kwargs,
-                                    label=r"${0}$ points".format(len(row_axis)))
+                    ax.scatter(col_axis, row_axis, color=BLUE, **scatter_kwargs,
+                               label=r"${0}$ points".format(len(row_axis)))
 
                 if (col_filename in err_dict) and (row_filename in err_dict):
                     ax.errorbar(col_axis, row_axis, xerr=err_dict[col_filename], yerr=err_dict[row_filename], fmt='o',
@@ -125,34 +140,57 @@ def plot_correlation(name, axis_dict, err_dict, color_map):
                 elif row_filename in err_dict:
                     ax.errorbar(col_axis, row_axis, yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
                                 ecolor=GREEN, **error_kwargs)
+                if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+                    idf = np.logspace(np.log10(min(min_max_axis[col_filename])), np.log10(max(min_max_axis[col_filename])), 30)
+                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                        model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
+                        results = model.fit()
+                        b, a = results.params[0:2]
+                        ax.plot(idf, np.exp(a * np.log(idf) + b), '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
+                            tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
+                            "+" if float(b) > 0 else "-"))
+                        if a > 0:
+                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
+                        ax.legend()
+                else:
+                    idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
+                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                        model = sm.OLS(row_axis, sm.add_constant(col_axis))
+                        results = model.fit()
+                        b, a = results.params[0:2]
+                        ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
+                            tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
+                            "+" if float(b) > 0 else "-"))
+                        if a > 0:
+                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
+                        ax.legend()
 
-                idf = np.linspace(min_col, max_col, 30)
-                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                    model = sm.OLS(row_axis, sm.add_constant(col_axis))
-                    results = model.fit()
-                    b, a = results.params[0:2]
-                    ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                        tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                        "+" if float(b) > 0 else "-"))
-                    if a > 0:
-                        ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                    ax.legend()
+            if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+            if row == len(axis_dict) - 1:
+                ax.set_xlabel(col_filename)
+            if col == 0:
+                ax.set_ylabel(row_filename)
 
     plt.tight_layout()
+
     if len(color_map) > 0:
         f.subplots_adjust(right=0.9)
         cbar_ax = f.add_axes([0.92, 0.05, 0.05, 0.90])
-        f.colorbar(sc, cax=cbar_ax)
-    plt.savefig(name, format='png')
+        cmappable = ScalarMappable(norm=norm, cmap=cm)
+        cmappable.set_array(color_map)
+        f.colorbar(cmappable, cax=cbar_ax)
+    plt.savefig(name, format=name[name.rfind('.') + 1:])
     plt.clf()
     plt.close('all')
 
 
 def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_width=0.5, hz_line_width=0.2,
-              max_circle_size=20, min_circle_size=4):
+              max_circle_size=20, min_circle_size=4, min_max_annot=()):
     node_list = tree.iter_descendants(strategy='postorder')
     node_list = chain(node_list, [tree])
-
+    print(feature + "\n" + outputpath)
     vlinec, vlines, vblankline, hblankline, nodes, nodex, nodey = [], [], [], [], [], [], []
 
     if len(tree) < 50:
@@ -174,6 +212,10 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
         max_annot = max(max_annot_list)
     else:
         max_annot = max(float(getattr(n, feature)) for n in tree.iter_leaves() if feature in n.features)
+
+    if len(min_max_annot) != 0:
+        min_annot = min(min_max_annot)
+        max_annot = max(min_max_annot)
 
     cmap = plt.get_cmap("Spectral_r")
     color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=cmap)
@@ -202,6 +244,7 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
             if min_node_annot and max_node_annot:
                 node_name += " [{0},{1}]".format(format_float(min_node_annot), format_float(max_node_annot))
             ax.text(x, y, node_name, va='center', size=font_size)
+            print(node_name)
         else:
             y = np.mean([node_pos[n2] for n2 in n.children])
             node_pos[n] = y
@@ -263,9 +306,9 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
 
     ax.set_axis_off()
     color_map._A = []
-    cbar = fig.colorbar(color_map, ax=ax, orientation='horizontal', pad=0, shrink=0.8)
+    cbar = fig.colorbar(color_map, ax=ax, orientation='horizontal', pad=0, shrink=1.0)
     cbar.ax.set_xlabel(feature, labelpad=0)
     plt.tight_layout()
-    plt.savefig(outputpath, format=outputpath[-3:])
+    plt.savefig(outputpath, format=outputpath[-3:], dpi=512)
     plt.show()
     plt.close("all")

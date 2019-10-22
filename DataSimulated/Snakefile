@@ -1,7 +1,9 @@
 import os
+
 ROOT = os.path.abspath('../../..')
 
 import sys
+
 sys.path.append(ROOT)
 from scripts.snakemake_module import *
 
@@ -89,7 +91,7 @@ localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_
 
 rule all:
     input:
-         EXPERIMENT + '/all_profiles',
+         # EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/all_traces',
          EXPERIMENT + '/all_trees'
 
@@ -131,13 +133,14 @@ if config['SIMULATION']['PREFERENCES'] == "SimuFold":
     rule init_simulation:
         output: PREFERENCES
         input:
-              exec=EXPERIMENT + '/SimuFold',
-              config_core=EXPERIMENT + '/config.SIMULATION',
-              config_pan=EXPERIMENT + '/config.SimuFold'
+             exec=EXPERIMENT + '/SimuFold',
+             config_core=EXPERIMENT + '/config.SIMULATION',
+             config_pan=EXPERIMENT + '/config.SimuFold'
         params:
               pan=SIMULATION_SIMUMODE_PARAM["SimuFold"]
         log: out=EXPERIMENT + '/std.init_SimuFold_exp.stdout', err=EXPERIMENT + '/std.init_SimuFold_exp.stderr'
-        shell: '{input.exec} {SIMULATION_PARAMS} {params.pan} --initialisation --output {EXPERIMENT}/SimuFold_exp 2> {log.err} 1> {log.out}'
+        shell:
+             '{input.exec} {SIMULATION_PARAMS} {params.pan} --initialisation --output {EXPERIMENT}/SimuFold_exp 2> {log.err} 1> {log.out}'
 
 rule run_simulation:
     output: touch(EXPERIMENT + '/{simumode}_exp')
@@ -147,8 +150,8 @@ rule run_simulation:
          config_pan=EXPERIMENT + '/config.' + '{simumode}',
          prefs=PREFERENCES
     params:
-          time="1-23:00", mem=300, threads=1,
-          pan=lambda w: SIMULATION_SIMUMODE_PARAM[w.simumode]
+          time="3-23:00", mem=300, threads=1,
+          pan=lambda wildcards: SIMULATION_SIMUMODE_PARAM[wildcards.simumode]
     benchmark: EXPERIMENT + "/benchmarks.simulation.{simumode}.tsv"
     log: out=EXPERIMENT + '/std.{simumode}_exp.stdout', err=EXPERIMENT + '/std.{simumode}_exp.stderr'
     shell: '{input.exec} {SIMULATION_PARAMS} {params.pan} --output {output} 2> {log.err} 1> {log.out}'
@@ -159,8 +162,8 @@ rule plot_simulation:
          src=ROOT + "/scripts/plot_simulation.py",
          simu=rules.run_simulation.output
     log:
-         out=EXPERIMENT + '/std.{simumode}_plot.stdout',
-         err=EXPERIMENT + '/std.{simumode}_plot.stderr'
+       out=EXPERIMENT + '/std.{simumode}_plot.stdout',
+       err=EXPERIMENT + '/std.{simumode}_plot.stderr'
     shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot}'
 
 rule draw_fossils:
@@ -170,6 +173,7 @@ rule draw_fossils:
          config=EXPERIMENT + '/config.INFERENCE_NODE'
     run:
         import pandas as pd
+
         seed = 6584
         df = pd.read_csv(input.simu[0] + ".fossils.tsv", sep="\t")
         df = df.sample(n=min(config['INFERENCE_NODE']['FOSSILS'], df.shape[0]), random_state=seed)
@@ -183,11 +187,11 @@ if config['INFERENCE']['RESTART']:
              simu=rules.run_simulation.output,
              fossils=rules.draw_fossils.output
         params:
-             time="4-23:00", mem=1500, threads=1,
+              time="18-00:00", mem=1500, threads=1,
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
         log:
-             out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
-             err=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
+           out=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
+           err=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
         shell: '{input.exec} {output} 2> {log.err} 1> {log.out}'
 else:
     rule run_inference:
@@ -198,11 +202,13 @@ else:
              fossils=rules.draw_fossils.output,
              config=EXPERIMENT + '/config.INFERENCE'
         params:
-             time="4-23:00", mem=1500, threads=1,
-             poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
-             node=lambda w: INFERENCE_NODE_PARAMS if w.model == "node" else "",
-             traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['TRAITS']) else "",
-             fossils=lambda w, input: " --fossils {0}.fossils.tsv.drawn".format(input.simu) if (w.model == "node" and config['INFERENCE_NODE']['FOSSILS'] > 0) else ""
+              time="18-00:00", mem=1500, threads=1,
+              poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
+              node=lambda wildcards: INFERENCE_NODE_PARAMS if wildcards.model == "node" else "",
+              traits=lambda wildcards, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (
+                      wildcards.model == "node" and config['INFERENCE_NODE']['TRAITS']) else "",
+              fossils=lambda wildcards, input: " --fossils {0}.fossils.tsv.drawn".format(input.simu) if (
+                      wildcards.model == "node" and config['INFERENCE_NODE']['FOSSILS'] > 0) else ""
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
         log:
              out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
@@ -216,11 +222,12 @@ rule plot_traces:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_traces')
     input:
          src=ROOT + "/scripts/plot_traces.py",
-         trace=expand(EXPERIMENT + '/{{simumode}}_{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
+         trace=expand(EXPERIMENT + '/{{simumode}}_{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS,
+                      polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
          config=EXPERIMENT + '/config.PLOT'
     log:
-         out=EXPERIMENT + '/std.{simumode}_inference_plot.stdout',
-         err=EXPERIMENT + '/std.{simumode}_inference_plot.stderr'
+       out=EXPERIMENT + '/std.{simumode}_inference_plot.stdout',
+       err=EXPERIMENT + '/std.{simumode}_inference_plot.stderr'
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
 
@@ -238,25 +245,27 @@ rule read_profiles:
          param_plot=EXPERIMENT + '/config.PLOT'
     benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
     log:
-         out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stdout',
-         err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stderr'
+       out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stdout',
+       err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stderr'
     shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
 
 rule plot_profiles:
     output: prefs=directory(EXPERIMENT + '/inference_{simumode}_{model}_profiles')
     input:
          src=ROOT + "/scripts/plot_profiles.py",
-         profiles=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read.siteprofiles', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
+         profiles=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read.siteprofiles',
+                         chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
     log:
-         out=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stdout',
-         err=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stderr'
+       out=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stdout',
+       err=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stderr'
     shell:
          'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
 
 rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
     input:
-         expand(EXPERIMENT + '/inference_{simumode}_{model}_profiles', simumode=INFERENCE_SIMULATORS, model=INFERENCE_MODELS)
+         expand(EXPERIMENT + '/inference_{simumode}_{model}_profiles', simumode=INFERENCE_SIMULATORS,
+                model=INFERENCE_MODELS)
 
 rule run_inference_second_pass:
     output: touch(EXPERIMENT + '/second_pass_{simumode}_{polymorphism}_{chain}_run')
@@ -267,15 +276,17 @@ rule run_inference_second_pass:
          profiles=EXPERIMENT + '/{simumode}_aa_{polymorphism}_{chain}_read.siteprofiles',
          config=EXPERIMENT + '/config.INFERENCE'
     params:
-         time="4-00:00", mem=5000, threads=1,
-         poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
-         prefs=lambda w: EXPERIMENT + '/inference_{simumode}_aa_profiles/{simumode}_aa_{polymorphism}_{chain}_read.prefs' ,
-         traits=lambda w, input: " --traitsfile {0}.traits.tsv".format(input.simu) if config['INFERENCE_NODE']['TRAITS'] else ""
+          time="18-00:00", mem=5000, threads=1,
+          poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
+          prefs=lambda wildcards: EXPERIMENT + '/inference_{simumode}_aa_profiles/{simumode}_aa_{polymorphism}_{chain}_read.prefs',
+          traits=lambda wildcards, input: " --traitsfile {0}.traits.tsv".format(input.simu) if config['INFERENCE_NODE'][
+              'TRAITS'] else ""
     benchmark: EXPERIMENT + "/benchmarks.inference.second_pass_{simumode}_{polymorphism}_{chain}_run.tsv"
     log:
-         out=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stdout',
-         err=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{INFERENCE_NODE_PARAMS}{params.traits} --profiles {params.prefs} {output} 2> {log.err} 1> {log.out}'
+       out=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stdout',
+       err=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stderr'
+    shell:
+         '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{INFERENCE_NODE_PARAMS}{params.traits} --profiles {params.prefs} {output} 2> {log.err} 1> {log.out}'
 
 rule second_pass:
     output: touch(EXPERIMENT + '/second_pass')
@@ -289,8 +300,8 @@ rule read_trees:
          param_plot=EXPERIMENT + '/config.PLOT'
     benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
     log:
-         out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stdout',
-         err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stderr'
+       out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stdout',
+       err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stderr'
     shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} 2> {log.err} 1> {log.out}'
 
 rule plot_trees:
@@ -298,11 +309,13 @@ rule plot_trees:
     input:
          src=ROOT + "/scripts/plot_trees.py",
          simu=rules.run_simulation.output,
-         trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
-         read=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
+         trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS,
+                      polymorphism=INFERENCE_POLYMORPHISM),
+         read=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read', chain=INFERENCE_CHAINS,
+                     polymorphism=INFERENCE_POLYMORPHISM),
     log:
-         out=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stdout',
-         err=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stderr'
+       out=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stdout',
+       err=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stderr'
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --simulation {input.simu} --output {output.plot} 2> {log.err} 1> {log.out}'
 

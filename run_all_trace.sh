@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-for EXPERIMENT in ./DataEmpirical/Experiments/*; do
+for EXPERIMENT in ./DataEmpirical/Experiments/Isopods*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}
   snakemake --unlock
-  snakemake build
+  snakemake build --rerun-incomplete
   snakemake --touch inference
-  snakemake --printshellcmds --rerun-incomplete -j 4
+  snakemake --printshellcmds -j 8 --rerun-incomplete
   cd ../../..
 done
-for EXPERIMENT in ./DataSimulated/Experiments/*; do
+for EXPERIMENT in ./DataSimulated/Experiments/Long*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}

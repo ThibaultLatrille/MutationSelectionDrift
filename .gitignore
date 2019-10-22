@@ -6,6 +6,7 @@
 
 *~
 Animation/Experiment/*
+*/.ipynb_checkpoints/
 Animation/.snakemake
 DataEmpirical/*/singlegene_alignments
 DataEmpirical/*/gblocks

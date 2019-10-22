@@ -27,7 +27,7 @@ def plot_profiles(args_infer, args_output, axis_dict):
         df.drop('site', axis=1, inplace=True)
         axis_dict[name] = df.values.flatten()
 
-    plot_correlation(os.path.join(args_output, 'correlation.png'), axis_dict, {}, [])
+    plot_correlation(os.path.join(args_output, 'correlation.png'), axis_dict, {}, [], global_xy=True)
 
 
 def open_input(input_prefs, args_output, axis_dict):

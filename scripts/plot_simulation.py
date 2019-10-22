@@ -7,6 +7,8 @@ import pandas as pd
 import argparse
 import os
 
+min_max_annot = ()
+
 
 def plot_simulation(input_simu, args_output):
     t = Tree(input_simu, format=1)
@@ -52,13 +54,17 @@ def plot_simulation(input_simu, args_output):
             values = np.array([float(getattr(n, arg)) for n in t.traverse() if
                                arg in n.features and convertible_to_float(getattr(n, arg))])
             if len(values) > 1 and len(values) == len(list(t.traverse())):
-                plot_tree(t, arg, "{0}/tree.{1}.png".format(args_output, arg))
+                root_pop_size = float(getattr(t.get_tree_root(), arg))
+                for n in t.traverse():
+                    n.add_feature("Log" + arg, np.log(float(getattr(n, arg)) / root_pop_size))
+                plot_tree(t, "Log" + arg, "{0}/tree.{1}.png".format(args_output, arg), min_max_annot=min_max_annot)
             if len(values) > 1 and ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
     der_pop_size = [(np.log10(float(n.population_size)) - float(n.Branch_LogNe)) for n in t.traverse() if
                     not n.is_root()]
-    plot_correlation("{0}/correlation.Ne.dNdS.png".format(args_output), branch_dict, {}, der_pop_size)
+    plot_correlation("{0}/correlation.Ne.dNdS.svg".format(args_output), branch_dict, {}, der_pop_size,
+                     min_max_annot=[0, 1.0], global_xy=False)
 
 
 if __name__ == '__main__':

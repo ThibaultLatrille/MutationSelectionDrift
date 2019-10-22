@@ -2,26 +2,32 @@
 import argparse
 import pandas as pd
 import numpy as np
-import imgkit
+import seaborn as sns
 import matplotlib
-
 matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 my_dpi = 128
-import seaborn as sns
-
+# 'RdYlGn'
+color_map = 'RdYlGn'
 sns.set()
 
 
-def partial_corr_from_precision_matrix(p):
-    partial_corr_matrix = np.zeros(p.shape, dtype=np.float64)
-
+def partial_cov_from_precision_matrix(p):
+    partial_cov_matrix = np.zeros(p.shape, dtype=np.float64)
     for i in range(p.shape[0]):
         for j in range(p.shape[1]):
-            partial_corr_matrix[i][j] = - p[i][j] / (np.sqrt(p[i][i] * p[j][j]))
-    return partial_corr_matrix
+            partial_cov_matrix[i][j] = - p[i][j] / (np.sqrt(p[i][i] * p[j][j]))
+    return partial_cov_matrix
+
+
+def corr_from_cov_matrix(p):
+    corr_matrix = np.zeros(p.shape, dtype=np.float64)
+    for i in range(p.shape[0]):
+        for j in range(p.shape[1]):
+            corr_matrix[i][j] = p[i][j] / (np.sqrt(p[i][i] * p[j][j]))
+    return corr_matrix
 
 
 def save_heatmap(mean_matrix, matrix_list, names, output_name):
@@ -31,18 +37,26 @@ def save_heatmap(mean_matrix, matrix_list, names, output_name):
             if i == j:
                 p_values[i][j] = None
             else:
-                signs = [np.sign(mean_matrix[i][j]) != np.sign(m[i][j]) for m in matrix_list]
-                p_values[i][j] = np.sum(signs) / len(signs)
+                signs = np.sum([np.sign(mean_matrix[i][j]) != np.sign(m[i][j]) for m in matrix_list])
+                p_values[i][j] = signs / len(matrix_list)
 
-    sns.heatmap(pd.DataFrame(p_values, index=names, columns=names), cmap='RdYlGn', annot=mean_matrix, linewidths=.5,
-                vmin=0, vmax=0.05)
+    sns.heatmap(pd.DataFrame(p_values, index=names, columns=names), cmap=color_map, annot=mean_matrix, linewidths=.5, vmin=0.001, vmax=0.05)
+    plt.tight_layout()
+    plt.savefig(output_name + ".pvalues.svg", format='svg')
+    plt.clf()
+    if np.max(np.abs(mean_matrix)) <= 1:
+        for i in range(mean_matrix.shape[0]):
+            mean_matrix[i][i] = None
+        sns.heatmap(pd.DataFrame(mean_matrix, index=names, columns=names), annot=mean_matrix, cmap=color_map, linewidths=.5, vmin=-1, vmax=1)
+    else:
+        sns.heatmap(pd.DataFrame(mean_matrix, index=names, columns=names), annot=mean_matrix, cmap=color_map, linewidths=.5)
     plt.tight_layout()
     plt.savefig(output_name + ".svg", format='svg')
     plt.clf()
     plt.close('all')
 
 
-def plot_correlation_matrix(input_trace, output_plot, burn_in):
+def plot_covariance_matrix(input_trace, output_plot, burn_in):
     trace = pd.read_csv(input_trace + '.trace', sep='\t')
     if len(trace.index) <= burn_in:
         print("Burn-in was set to {0} but there is only {1} points to read.".format(burn_in, len(trace.index)))
@@ -70,23 +84,32 @@ def plot_correlation_matrix(input_trace, output_plot, burn_in):
                 if i != j:
                     precision_matrix[j][i] = precision_matrix[i][j]
 
-    partial_corr_matrix = partial_corr_from_precision_matrix(precision_matrix)
-    partial_corr_matrix_list = [partial_corr_from_precision_matrix(p) for p in precision_matrix_list]
+    cov_matrix = np.linalg.inv(precision_matrix)
+    cov_matrix_list = [np.linalg.inv(p) for p in precision_matrix_list]
 
-    corr_matrix = np.linalg.inv(precision_matrix)
-    corr_matrix_list = [np.linalg.inv(p) for p in precision_matrix_list]
+    corr_matrix = corr_from_cov_matrix(cov_matrix)
+    corr_matrix_list = [corr_from_cov_matrix(c) for c in cov_matrix_list]
 
     if "nodeomega" in input_trace:
         names = ["LogOmega", "LogMutationRate"]
     else:
         names = ["LogNe", "LogMutationRate"]
-    names += ["Maximum longevity (yrs)", "Adult weight (g)", "Female maturity (days)"]
+    if "47SP" in input_trace or "Vertebrates" in input_trace:
+        names += ["Longevity (days)", "Length (cm)", "Weight (kg)"]
+    else:
+        names += ["Maximum longevity (yrs)", "Adult weight (g)", "Female maturity (days)"]
     if dim < len(names):
         names = names[:dim]
 
-    save_heatmap(partial_corr_matrix, partial_corr_matrix_list, names, output_plot + "_partial_correlation")
+    save_heatmap(cov_matrix, cov_matrix_list, names, output_plot + "_covariance")
     save_heatmap(corr_matrix, corr_matrix_list, names, output_plot + "_correlation")
     save_heatmap(precision_matrix, precision_matrix_list, names, output_plot + "_precision")
+    for in_dim in range(2, dim + 1):
+        sub_par_matrix = partial_cov_from_precision_matrix(np.linalg.inv(cov_matrix[:in_dim, :in_dim]))
+        sub_par_matrix_list = [partial_cov_from_precision_matrix(np.linalg.inv(c[:in_dim, :in_dim])) for c in
+                               cov_matrix_list]
+        save_heatmap(sub_par_matrix, sub_par_matrix_list, names[:in_dim],
+                     output_plot + "_partial_correlation_{0}".format(in_dim))
 
 
 if __name__ == '__main__':
@@ -95,4 +118,4 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--trace', required=True, type=str, dest="trace")
     parser.add_argument('-b', '--burn_in', required=False, type=int, default=0, dest="burn_in")
     args = parser.parse_args()
-    plot_correlation_matrix(args.trace, args.output, args.burn_in)
+    plot_covariance_matrix(args.trace, args.output, args.burn_in)

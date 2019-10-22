@@ -1,13 +1,13 @@
 EXPERIMENT:
   COMPILE: false
 SIMULATION:
-  TREE: SimuEvol/data/trees/mammal_subtree.tre.annotated
-  PREFERENCES: SimuFold
+  TREE: SimuEvol/data/trees/placnr.short.rootedtree.nhx
+  PREFERENCES: SimuEvol/data/preferences/np_5000_30.prefs
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
   PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
   MUTATION_RATE_PER_GENERATION: 1.0e-8
   ROOT_AGE: 300e6
-  GENERATION_TIME: 20
+  GENERATION_TIME: 10
   EXON_SIZE: 300
   SEED: 653
   BRANCH_WISE_CORRELATION: false
@@ -36,9 +36,9 @@ INFERENCE_REPLICATE:
   SIMULATORS: [SimuPoly, SimuDiv, SimuFold]
 INFERENCE:
   RESTART: false
-  POINTS: 1000
+  POINTS: 3000
   PRECISION: 10
-  NCAT: 30
+  NCAT: 50
 INFERENCE_NODE:
   TRAITS: true
   FOSSILS: 0
@@ -49,4 +49,4 @@ INFERENCE_NODE:
   CLAMP_CORR_MATRIX: false
   ARITHMETIC: false
 PLOT:
-  BURN_IN: 30
+  BURN_IN: 200

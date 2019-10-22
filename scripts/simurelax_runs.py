@@ -5,15 +5,15 @@ cluster = False
 nbr_cpu = 1
 
 if cluster:
-    current_dir = "/panhome/tlatrill/SimuEvol"
+    current_dir = "/beegfsdata/tlatrill/SimuVsInfer"
     cmd = "qsub"
 else:
-    current_dir = "/home/thibault/SimuEvol"
+    current_dir = "/home/thibault/PolyMutSel"
     cmd = "sh"
 
 os.makedirs(current_dir, exist_ok=True)
 os.makedirs(current_dir + "/qsub", exist_ok=True)
-data_path = "{0}/data_relax".format(current_dir)
+data_path = "{0}/DataSimulated/SimuRelax".format(current_dir)
 os.makedirs(data_path, exist_ok=True)
 
 
@@ -31,8 +31,8 @@ def runs(pop_size, k, mu, r, n, m, a, q):
     qsub_str += "#PBS -W umask=022\n"
     qsub_str += "#PBS -r n\n"
 
-    simu_evol_cmd = current_dir
-    simu_evol_cmd += "/SimuRelax --pop_size={0} --k={1} --mu={2} --r={3} --n={4} --m={5} --a={6} --q={7} --dir={8}"
+    simu_evol_cmd = "{0}/SimuEvol/build/SimuRelax".format(current_dir)
+    simu_evol_cmd += " --pop_size {0} --chromosomes {1} --mutation_rate_per_generation {2} --radius {3} --complexity {4} --pleiotropy {5} --peakness {6} --epistasis {7} --output {8}"
     simu_evol_cmd = simu_evol_cmd.format(pop_size, k, mu, r, n, m, a, q, data_path)
     qsub_str += simu_evol_cmd
 

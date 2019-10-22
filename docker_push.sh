@@ -4,7 +4,8 @@ TAG=beta
 REPO=thibaultlatrille/${IMAGE_NAME}:${TAG}
 
 echo "Building ${REPO}"
-docker build -t ${REPO} -f Dockerfile .
+mkdir -p ./docker
+docker build -t ${REPO} -f Dockerfile ./docker
 
 read -p "Do you want to push the image? " -n 1 -r
 echo    # (optional) move to a new line

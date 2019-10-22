@@ -4,7 +4,8 @@ import numpy as np
 from ete3 import Tree
 from plot_module import plot_correlation, to_float
 
-exp_dirs = sorted(set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if "Replicates" in i]))
+exp_dirs = sorted(
+    set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if ("Replicates" in i) and ("Vertebrates_rootedtree.nhx_cds.list_Sample24_Replicates6" in i)]))
 print(exp_dirs)
 os.makedirs("Analysis", exist_ok=True)
 
@@ -48,4 +49,4 @@ for exp in exp_dirs:
             axis_dict[name] = values
             err_dict[name] = np.vstack((np.abs(values - min_values), np.abs(max_values - values)))
 
-        plot_correlation("Analysis/" + exp + "/" + tree_name, axis_dict, err_dict, [])
+        plot_correlation("Analysis/" + exp + "/" + tree_name.replace(".nhx", ".svg"), axis_dict, err_dict, [], global_xy=True)

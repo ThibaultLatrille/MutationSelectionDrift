@@ -7,9 +7,11 @@ from glob import glob
 from ete3 import Tree
 from plot_module import plot_correlation, plot_tree, to_float
 
+min_max_annot = ()
+
 
 def remove_units(str):
-    return str.replace("(g)", "").replace("(days)", "").replace("(yrs)", "")
+    return str.replace("(g)", "").replace("(days)", "").replace("(yrs)", "").replace("(kg)", "").replace("(cm)", "")
 
 
 def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, simu_tree):
@@ -20,7 +22,10 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             feature = remove_units(tree_path.replace(filepath + ".", "").replace(".nhx", ""))
             filename = os.path.basename(filepath)
             with open(tree_path, 'r') as tree_file:
-                tree = Tree(remove_units(tree_file.readline()), format=1)
+                tree_str = remove_units(tree_file.readline())
+                if tree_str.count("-nan") > 0:
+                    continue
+                tree = Tree(tree_str, format=1)
 
             if simu_tree:
                 for n_inf, n_simu in zip(tree.traverse(), simu_tree.traverse()):
@@ -34,7 +39,8 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             axis_filenames[feature].append(filename)
             axis_trees[feature].append(tree)
             if len([n for n in tree.traverse() if feature in n.features]) == len(list(tree.traverse())):
-                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.png".format(output_plot, filename, feature))
+                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.png".format(output_plot, filename, feature),
+                          min_max_annot=min_max_annot)
 
     for feature in axis_trees:
         axis_dict, err_dict = dict(), dict()
@@ -50,11 +56,12 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             err_dict[filename] = np.vstack((np.abs(values - min_values), np.abs(max_values - values)))
 
         if len(axis_dict) > 1:
-            path = '{0}/correlation.{1}.png'.format(output_plot, feature)
+            path = '{0}/correlation.{1}.svg'.format(output_plot, feature)
+
             if feature in color_map_dict:
-                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature])
+                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], min_max_annot=min_max_annot, global_xy=False)
             else:
-                plot_correlation(path, axis_dict, err_dict, [])
+                plot_correlation(path, axis_dict, err_dict, [], min_max_annot=(), global_xy=False)
 
 
 def open_simulation(input_simu):
@@ -66,6 +73,10 @@ def open_simulation(input_simu):
     simu_dict["LogPopulationSize"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
     root_age = simu_params["tree_max_distance_to_root_in_year"]
 
+    simu_dict["ContrastPopulationSize"] = [
+        (np.log(float(n.population_size)) - np.log(float(n.up.population_size))) / np.sqrt(
+            n.get_distance(n.up) / root_age) for n in t.traverse() if not n.is_root()]
+
     if "population_size" in simu_params:
         simu_dict["LogMutationRatePerGeneration"] = [np.log(float(n.mutation_rate_per_generation) * root_age) for n in
                                                      t.traverse()]
@@ -76,8 +87,8 @@ def open_simulation(input_simu):
         simu_dict["Log10Theta"] = [np.log10(4 * float(n.mutation_rate_per_generation) * float(n.population_size)) for n
                                    in
                                    t.traverse() if n.is_leaf()]
-        color_map_dict["Log10Theta"] = [np.log(float(n.population_size)) - np.log(float(n.up.population_size)) for n in
-                                        t.traverse() if n.is_leaf()]
+        color_map_dict["Log10Theta"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse() if
+                                        n.is_leaf()]
     else:
         simu_dict["LogMutationRatePerTime"] = [np.log(float(n.mutation_rate) * root_age) for n in t.traverse()]
 
@@ -86,14 +97,12 @@ def open_simulation(input_simu):
         np.log10(n.get_distance(n.up) * float(n.Branch_mutation_rate_per_generation) / float(n.Branch_generation_time))
         for n in t.traverse() if not n.is_root()]
 
-    color_map_branch = [np.log(float(n.population_size)) - np.log(float(n.up.population_size)) for n in t.traverse() if
-                        not n.is_root()]
+    color_map_branch = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse() if not n.is_root()]
     color_map_dict["BranchTime"] = color_map_branch
     color_map_dict["Log10BranchLength"] = color_map_branch
+    color_map_dict["ContrastPopulationSize"] = color_map_branch
 
-    color_map_nodes = [
-        (np.log(float(n.population_size)) - np.log(float(n.up.population_size)) if not n.is_root() else 0.0)
-        for n in t.traverse()]
+    color_map_nodes = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
     color_map_dict["LogMutationRatePerGeneration"] = color_map_nodes
     color_map_dict["LogGenerationTime"] = color_map_nodes
     color_map_dict["LogMutationRatePerTime"] = color_map_nodes
