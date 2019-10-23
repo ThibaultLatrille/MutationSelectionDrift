@@ -11,5 +11,6 @@ read -p "Do you want to push the image? " -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
+    echo "docker push ${REPO}"
     docker push ${REPO}
 fi
