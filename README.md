@@ -27,8 +27,8 @@ and start experimenting in your browser.
 
 Or chose the red pill and install the requirements and compile the C++ code for *SimuEvol* and *BayesCode* in your Debian based OS.
 
-Blue bill is prefered is you want minimal conflict with your local system.
-Red bill method is prefered if you plan to extensively use the program and tinker with the code.
+Blue pill is prefered is you want minimal conflict with your local system.
+Red pill method is prefered if you plan to extensively use the program and tinker with the code.
 The two pills are mutually not exclusive, no overdose had ever been observed (though no statistical study had been performed).
 
 ### 1.a. Blue pill - Docker
