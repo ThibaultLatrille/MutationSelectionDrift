@@ -54,7 +54,15 @@ SIMUFOLD_PARAMS += ' --nbr_exons {0}'.format(config['SimuFold']['NBR_EXONS'])
 if 'CUT_OFF' in config['SimuFold']:
     SIMUFOLD_PARAMS += ' --cut_off {0}'.format(config['SimuFold']['CUT_OFF'])
 
-SIMULATION_SIMUMODE_PARAM = {"SimuDiv": SIMUDIV_PARAMS, "SimuPoly": SIMUPOLY_PARAMS, "SimuFold": SIMUFOLD_PARAMS}
+SIMUGEO_PARAMS=""
+if 'SimuGeo' in config:
+    SIMUGEO_PARAMS += '--nbr_grid_step {0}'.format(config['SimuGeo']['NBR_GRID_STEP'])
+    SIMUGEO_PARAMS += ' --pop_size {0}'.format(config['SimuGeo']['POP_SIZE'])
+    SIMUGEO_PARAMS += ' --complexity {0}'.format(config['SimuGeo']['COMPLEXITY'])
+    SIMUGEO_PARAMS += ' --nbr_exons {0}'.format(config['SimuGeo']['NBR_EXONS'])
+
+SIMULATION_SIMUMODE_PARAM = {"SimuDiv": SIMUDIV_PARAMS, "SimuPoly": SIMUPOLY_PARAMS,
+                             "SimuFold": SIMUFOLD_PARAMS, "SimuGeo": SIMUGEO_PARAMS}
 
 PLOT_BURN_IN = config['PLOT']['BURN_IN']
 
@@ -87,11 +95,11 @@ INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 for program in ['bayescode', 'SimuEvol']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, init_simulation, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
+localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
 
 rule all:
     input:
-         # EXPERIMENT + '/all_profiles',
+         EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/all_traces',
          EXPERIMENT + '/all_trees'
 
@@ -115,11 +123,12 @@ rule make_simuevol:
     output:
           EXPERIMENT + '/SimuDiv',
           EXPERIMENT + '/SimuFold',
+          EXPERIMENT + '/SimuGeo',
           EXPERIMENT + '/SimuPoly'
     input: dir=EXPERIMENT + '/SimuEvol.version'
     params: compile="&& make clean && make" if COMPILE else ""
     log: out=EXPERIMENT + '/std.SimuEvol.stdout', err=EXPERIMENT + '/std.SimuEvol.stderr'
-    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT} && cp build/SimuFold {EXPERIMENT}'
+    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuFold {EXPERIMENT} && cp build/SimuGeo {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
 
 rule build:
     input:
@@ -127,6 +136,7 @@ rule build:
          expand(EXPERIMENT + '/read{model}mutsel', model=INFERENCE_MODELS),
          EXPERIMENT + '/SimuDiv',
          EXPERIMENT + '/SimuFold',
+         EXPERIMENT + '/SimuGeo',
          EXPERIMENT + '/SimuPoly'
 
 if config['SIMULATION']['PREFERENCES'] == "SimuFold":
@@ -234,7 +244,7 @@ rule plot_traces:
 rule all_traces:
     output: touch(EXPERIMENT + '/all_traces')
     input:
-         expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
+         # expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
          expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS)
 
 rule read_profiles:

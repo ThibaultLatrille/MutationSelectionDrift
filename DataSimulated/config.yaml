@@ -20,6 +20,11 @@ SimuFold:
   NBR_GRID_STEP: 100
   POP_SIZE: 1e5
   CUT_OFF: 7.0
+SimuGeo:
+  NBR_GRID_STEP: 100
+  POP_SIZE: 2000.0
+  COMPLEXITY: 3
+  NBR_EXONS: 12
 SimuDiv:
   BETA: 1.0
   NBR_GRID_STEP: 100
@@ -32,8 +37,8 @@ SimuPoly:
 INFERENCE_REPLICATE:
   CHAINS: [1, 2]
   POLYMORPHISM: [false]
-  MODELS: [node, aa]
-  SIMULATORS: [SimuPoly, SimuDiv, SimuFold]
+  MODELS: [node]
+  SIMULATORS: [SimuDiv, SimuFold, SimuGeo, SimuPoly]
 INFERENCE:
   RESTART: false
   POINTS: 3000
