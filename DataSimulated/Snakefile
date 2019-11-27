@@ -70,8 +70,9 @@ PLOT_BURN_IN = config['PLOT']['BURN_IN']
 assert (PLOT_BURN_IN < config['INFERENCE']['POINTS'])
 INFERENCE_PARAMS = '-t ' + TREE
 INFERENCE_PARAMS += ' -u {0}'.format(config['INFERENCE']['POINTS'])
-INFERENCE_PARAMS += ' --precision {0}'.format(config['INFERENCE']['PRECISION'])
-INFERENCE_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
+
+MUTSEL_PARAMS = ' --precision {0}'.format(config['INFERENCE']['PRECISION'])
+MUTSEL_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
 
 INFERENCE_NODE_PARAMS = " "
 if config['INFERENCE_NODE']['CLAMP_PREFERENCES']:
@@ -99,7 +100,7 @@ localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_
 
 rule all:
     input:
-         EXPERIMENT + '/all_profiles',
+         # EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/all_traces',
          EXPERIMENT + '/all_trees'
 
@@ -213,6 +214,7 @@ else:
              config=EXPERIMENT + '/config.INFERENCE'
         params:
               time="18-00:00", mem=1500, threads=1,
+              mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
               poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
               node=lambda wildcards: INFERENCE_NODE_PARAMS if wildcards.model == "node" else "",
               traits=lambda wildcards, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (
@@ -223,7 +225,7 @@ else:
         log:
              out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
              err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
-        shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.node}{params.traits}{params.fossils} {output} 2> {log.err} 1> {log.out}'
+        shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.node}{params.traits}{params.fossils} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
@@ -244,7 +246,7 @@ rule plot_traces:
 rule all_traces:
     output: touch(EXPERIMENT + '/all_traces')
     input:
-         # expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
+         expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
          expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS)
 
 rule read_profiles:
@@ -268,8 +270,10 @@ rule plot_profiles:
     log:
        out=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stdout',
        err=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stderr'
+    params:
+         prefs = lambda wildcards: " --input " + PREFERENCES if (wildcards.simumode != "SimuGeo" and wildcards.simumode != "SimuFold") else ""
     shell:
-         'mkdir -p {output.prefs} && python3 {input.src} --input {PREFERENCES} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.prefs} && python3 {input.src}{params.prefs} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
 
 rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
