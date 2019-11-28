@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-for EXPERIMENT in ./DataEmpirical/Experiments/Isopods*; do
+for EXPERIMENT in ./DataEmpirical/Experiments/*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}
@@ -9,7 +9,7 @@ for EXPERIMENT in ./DataEmpirical/Experiments/Isopods*; do
   snakemake --printshellcmds -j 8 --rerun-incomplete
   cd ../../..
 done
-for EXPERIMENT in ./DataSimulated/Experiments/Long*; do
+for EXPERIMENT in ./DataSimulated/Experiments/*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}

@@ -24,6 +24,10 @@ def create_experiment(prefix, name, cds_name, tree_name, lht, calibs, screen, sb
         print("Fossil Calibrations file provided (" + calibs + ")")
         os.system('cp {0}/{1} {2}/calibs.tsv'.format(root_path, calibs, exp_path))
 
+    if os.path.isfile('{0}/known_population_size.tsv'.format(root_path)):
+        print("Known population size file provided (known_population_size.tsv)")
+        os.system('cp {0}/known_population_size.tsv {1}'.format(root_path, exp_path))
+
     run_file = exp_path + "/snakeslurm.sh"
     with open(run_file, 'w') as w:
         w.write("#!/usr/bin/env bash\n")
@@ -37,7 +41,7 @@ def create_experiment(prefix, name, cds_name, tree_name, lht, calibs, screen, sb
         w.write(run_str)
     os.system("chmod 755 " + run_file)
     cmd = 'cd ' + exp_path + ' && ./snakeslurm.sh'
-    screen_cmd = 'screen -dmS ' + experiment + ' bash -c "' + cmd + '"'
+    screen_cmd = 'screen -dmS ' + "{0}_{1}".format(prefix, name) + ' bash -c "' + cmd + '"'
     with open(exp_path + "/screen.sh", 'w') as w:
         w.write("#!/usr/bin/env bash\n")
         w.write(screen_cmd)
@@ -52,7 +56,7 @@ def create_experiment(prefix, name, cds_name, tree_name, lht, calibs, screen, sb
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-p', '--prefix', required=False, type=str, default="Ncat50", dest="prefix")
-    parser.add_argument('-n', '--name', required=False, type=str, default="Primates", dest="name")
+    parser.add_argument('-n', '--name', required=False, type=str, default="Guinet", dest="name")
     parser.add_argument('--cds', required=False, type=str, default="CDS.ali", dest="cds")
     parser.add_argument('--tree', required=False, type=str, default="rootedtree.nhx", dest="tree")
     parser.add_argument('--lht', required=False, type=str, default="life_history_traits.tsv", dest="lht")

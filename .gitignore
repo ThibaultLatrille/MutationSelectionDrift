@@ -5,14 +5,24 @@
 #   git config --global core.excludesfile '~/.gitignore_global'
 
 *~
-Animation/Experiment/*
 */.ipynb_checkpoints/
-Animation/.snakemake
+/bayescode
+/SimuEvol
+/notebooks
+/manuscript
+DataEmpirical/sp*
+DataEmpirical/47SP
+DataEmpirical/Benitiere*
+DataEmpirical/Cetacea*
+DataEmpirical/Drosophila*
+DataEmpirical/Guinet
+DataEmpirical/Simiiformes
 DataEmpirical/*/singlegene_alignments
 DataEmpirical/*/gblocks
 DataEmpirical/*/fasta
 DataEmpirical/*/.snakemake
-DataEmpirical/OrthoMam/SNP
+DataSimulated/BackUp
+DataSimulated/SimuRelax
 Data*/Experiments/*
 Data*/Analysis
 orthomam.tsv
@@ -23,10 +33,6 @@ orthomam.tsv
 *.taxons.nhx
 *.tree
 .idea/
-/bayescode
-/SimuEvol
-/notebooks
-/Figures
 *.pyc
 *.aux
 *.log

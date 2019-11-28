@@ -25,8 +25,11 @@ if __name__ == '__main__':
     df = []
     for n in nwk.iter_descendants(strategy='postorder'):
         if not n.is_leaf():
-            age = n.get_closest_leaf()[1]
             name = tree.get_common_ancestor(n.get_leaf_names()).name
+            if n.dist <= 0:
+                print("Node " + name + " is attached to it's parent, thus it's discarded.")
+                continue
+            age = n.get_closest_leaf()[1]
             df += [[name, age, age * 0.9, age * 1.1]]
 
     header = ["NodeName", "Age", "LowerBound", "UpperBound"]

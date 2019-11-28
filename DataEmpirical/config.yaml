@@ -1,10 +1,10 @@
 INFERENCE_REPLICATE:
   CHAINS: [1, 2]
-  MODELS: [node]
+  MODELS: [node, nodeomega]
   POLYMORPHISM: [false]
 INFERENCE:
   POINTS: 4000
   PRECISION: 12
-  NCAT: 50
+  NCAT: 10
 PLOT:
   BURN_IN: 300

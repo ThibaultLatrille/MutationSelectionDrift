@@ -9,7 +9,7 @@ from matplotlib.colors import Normalize
 matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
+import pandas as pd
 my_dpi = 128
 RED = "#EB6231"
 YELLOW = "#E29D26"
@@ -48,7 +48,7 @@ def to_float(f):
 
 
 def format_float(x):
-    if x > 0:
+    if 10 > x >= 0:
         return "{0:.2f}".format(x)
     else:
         return "{0:.1f}".format(x)
@@ -88,7 +88,7 @@ def plot_correlation(name, axis_dict, err_dict, color_map, min_max_annot=(), glo
 
     scatter_kwargs = {"zorder": 0}
     error_kwargs = {"lw": .5, "zorder": -1}
-    cm = plt.cm.get_cmap('Spectral_r')
+    cm = plt.cm.get_cmap('inferno')
     if len(color_map) > 0:
         if len(min_max_annot) != 0:
             min_annot, max_annot = min(min_max_annot), max(min_max_annot)
@@ -96,7 +96,7 @@ def plot_correlation(name, axis_dict, err_dict, color_map, min_max_annot=(), glo
             min_annot, max_annot = min(color_map), max(color_map)
         norm = Normalize(vmin=min_annot, vmax=max_annot)
 
-    if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+    if "Log" in name.split("/")[-1]:
         for axis in axis_dict:
             axis_dict[axis] = np.exp(axis_dict[axis])
             if axis in err_dict:
@@ -140,7 +140,7 @@ def plot_correlation(name, axis_dict, err_dict, color_map, min_max_annot=(), glo
                 elif row_filename in err_dict:
                     ax.errorbar(col_axis, row_axis, yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
                                 ecolor=GREEN, **error_kwargs)
-                if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+                if "Log" in name.split("/")[-1]:
                     idf = np.logspace(np.log10(min(min_max_axis[col_filename])), np.log10(max(min_max_axis[col_filename])), 30)
                     if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
                         model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
@@ -165,7 +165,7 @@ def plot_correlation(name, axis_dict, err_dict, color_map, min_max_annot=(), glo
                             ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
                         ax.legend()
 
-            if "Log" in name.split("/")[-1] or "Contrast" in name.split("/")[-1]:
+            if "Log" in name.split("/")[-1]:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
             if row == len(axis_dict) - 1:
@@ -217,13 +217,14 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
         min_annot = min(min_max_annot)
         max_annot = max(min_max_annot)
 
-    cmap = plt.get_cmap("Spectral_r")
+    cmap = plt.get_cmap("inferno")
     color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=cmap)
 
     node_pos = dict((n2, i) for i, n2 in enumerate(tree.get_leaves()[::-1]))
 
     max_name_size = max(len(n.name) for n in tree)
     # draw tree
+    rows = []
     for n in node_list:
         x = sum(n2.dist for n2 in n.iter_ancestors()) + n.dist
 
@@ -237,14 +238,18 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
             y = node_pos[n]
 
             node_name = " " + n.name
+            row = {"Taxon": n.name}
             if len(n.name) != max_name_size:
                 node_name += " " * (max_name_size - len(n.name))
             if feature in n.features:
                 node_name += " " + format_float(float(getattr(n, feature)))
+                row[feature] = float(getattr(n, feature))
             if min_node_annot and max_node_annot:
                 node_name += " [{0},{1}]".format(format_float(min_node_annot), format_float(max_node_annot))
+                row[feature + "Lower"] = min_node_annot
+                row[feature + "Upper"] = max_node_annot
             ax.text(x, y, node_name, va='center', size=font_size)
-            print(node_name)
+            rows.append(row)
         else:
             y = np.mean([node_pos[n2] for n2 in n.children])
             node_pos[n] = y
@@ -273,6 +278,7 @@ def plot_tree(tree, feature, outputpath, font_size=12, line_type="-", vt_line_wi
         nodex.append(x)
         nodey.append(y)
 
+    pd.DataFrame(rows).to_csv(outputpath[:-4] + ".tsv", index=None, header=rows[0].keys(), sep='\t')
     vline_col = LineCollection(vlinec, colors=[color_map.to_rgba(l) for l in vlines],
                                linestyle=line_type,
                                linewidth=vt_line_width * 2)

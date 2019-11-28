@@ -13,37 +13,6 @@ min_max_annot = ()
 def plot_simulation(input_simu, args_output):
     t = Tree(input_simu, format=1)
 
-    nodes_file = input_simu.replace(".nhx", ".nodes.tsv")
-    if os.path.isfile(nodes_file):
-        nodes = pd.read_csv(nodes_file, sep='\t')
-        ss_nodes = ["Branch_dN", "Branch_dS", "Branch_dNdS"]
-        leaves = pd.read_csv(input_simu.replace(".nhx", ".leaves.tsv"), sep='\t')
-        ss_leaves = []
-        for method in ["pairwise", "watterson"]:
-            for subset in ["", "_syn", "_non_syn"]:
-                ss_leaves.append("theta_{0}{1}".format(method, subset))
-        data = {"nodes": (nodes, ss_nodes), "leaves": (leaves, ss_leaves)}
-
-        for csv, ss_list in data.values():
-            for ss in ss_list:
-                cols, groups = zip(*csv.groupby(by="taxon_name"))
-                values = np.array([g[ss].values for g in groups]).T
-                df = pd.DataFrame(values, columns=cols)
-                df.boxplot(column=list(cols))
-                for key in [ss, ss + "_pred", ss + "_flow"]:
-                    values = [float(getattr(n, key)) for n in t.traverse() if key in n.features]
-                    if len(values) > 0 and len(values) == len(cols):
-                        plt.scatter(list(cols), values, label="Exome " + key)
-
-                if "theta" in ss:
-                    plt.yscale("log")
-                plt.ylabel(ss)
-                plt.xticks(rotation='vertical')
-                plt.legend()
-                plt.savefig("{0}/boxplot.{1}.png".format(args_output, ss), bbox_inches='tight')
-                plt.clf()
-                plt.close("all")
-
     args_nodes = set()
     for node in t.traverse():
         args_nodes = args_nodes.union(node.features)

@@ -3,6 +3,7 @@ import argparse
 import os
 import pandas as pd
 import matplotlib
+import numpy as np
 matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -14,11 +15,19 @@ def plot_trace(input_trace, output_plot, burn_in):
     filenames = []
 
     for filepath in input_trace:
+        if not os.path.isfile(filepath + '.trace'):
+            continue
         filenames.append(os.path.basename(filepath))
         for x_param, vals in pd.read_csv(filepath + '.trace', sep='\t').items():
             if x_param not in traces:
                 traces[x_param] = dict()
             traces[x_param][os.path.basename(filepath)] = vals
+
+    mean_dict = {"Name": filenames}
+    for p, v in traces.items():
+        mean_dict[p] = [np.mean(v[f]) if f in v else "NaN" for f in filenames]
+        mean_dict[p + "Var"] = [1.96 * np.std(v[f]) if f in v else "NaN" for f in filenames]
+    pd.DataFrame(mean_dict).to_csv('{0}/traces.tsv'.format(output_plot), index=False, header=mean_dict.keys(), sep="\t")
 
     for x_param, x_traces_param in traces.items():
         plt.figure(figsize=(1920 / my_dpi, 1080 / my_dpi), dpi=my_dpi)

@@ -1,7 +1,0 @@
-Dendroctonus_ponderosae
-Drosophila_melanogaster
-Apis_mellifera
-zootermopsis_nevadensis
-Halyomorpha_halys
-Acyrthosiphon_pisum
-Cimex_lectularius

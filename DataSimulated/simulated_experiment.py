@@ -38,7 +38,7 @@ def create_experiment(experiment, screen, sbatch, nbr_cpu):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--experiment', required=False, type=str, default="", dest="experiment")
+    parser.add_argument('-e', '--experiment', required=False, type=str, default="2000", dest="experiment")
     parser.add_argument('-s', '--screen', required=False, type=bool, default=False, dest="screen")
     parser.add_argument('-b', '--sbatch', required=False, type=bool, default=False, dest="sbatch")
     parser.add_argument('-c', '--nbr_cpu', required=False, type=int, default=4, dest="nbr_cpu")

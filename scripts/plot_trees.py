@@ -39,8 +39,7 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             axis_filenames[feature].append(filename)
             axis_trees[feature].append(tree)
             if len([n for n in tree.traverse() if feature in n.features]) == len(list(tree.traverse())):
-                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.png".format(output_plot, filename, feature),
-                          min_max_annot=min_max_annot)
+                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.png".format(output_plot, filename, feature), min_max_annot=min_max_annot)
 
     for feature in axis_trees:
         axis_dict, err_dict = dict(), dict()
@@ -59,7 +58,8 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             path = '{0}/correlation.{1}.svg'.format(output_plot, feature)
 
             if feature in color_map_dict:
-                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], min_max_annot=min_max_annot, global_xy=False)
+                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], min_max_annot=min_max_annot,
+                                 global_xy=False)
             else:
                 plot_correlation(path, axis_dict, err_dict, [], min_max_annot=(), global_xy=False)
 
@@ -69,7 +69,7 @@ def open_simulation(input_simu):
 
     simu_params = {k: v[0] for k, v in pd.read_csv(input_simu + '.parameters.tsv', sep='\t').items()}
     t = Tree(input_simu + ".nhx", format=1)
-    root_pop_size = simu_params["population_size"] if "population_size" in simu_params else 1.0
+    root_pop_size = float(t.population_size)
     simu_dict["LogPopulationSize"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
     root_age = simu_params["tree_max_distance_to_root_in_year"]
 
@@ -110,14 +110,38 @@ def open_simulation(input_simu):
     return simu_dict, color_map_dict, t
 
 
+def open_tsv_population_size(tree_file, tsv_file):
+    t = Tree(tree_file, format=1)
+    csv = pd.read_csv(tsv_file, header=None, sep='\t')
+    for index, (leaf_1, leaf_2, _, ne, _) in csv.iterrows():
+        if leaf_1 == leaf_2:
+            leaves = t.get_leaves_by_name(leaf_1)
+            assert (len(leaves) == 1)
+            n = leaves[0]
+        else:
+            n = t.get_common_ancestor([leaf_1, leaf_2])
+        n.pop_size = ne
+
+    pop_size_dict = dict()
+    root_pop_size = float(t.pop_size)
+    pop_size_dict["LogPopulationSize"] = [np.log(float(n.pop_size) / root_pop_size) for n in t.traverse()]
+    return pop_size_dict, t
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-s', '--simulation', required=False, default="", type=str, dest="simulation")
     parser.add_argument('-o', '--output', required=True, type=str, dest="output")
     parser.add_argument('-t', '--trace', required=True, type=str, nargs='+', dest="trace")
+    parser.add_argument('--tree', required=False, default="", type=str, dest="tree")
+    parser.add_argument('--tsv', required=False, default="", type=str, dest="tsv")
+
     args = parser.parse_args()
     if args.simulation != "":
         simu, color_map, simu_tree = open_simulation(args.simulation)
         plot_trees_from_traces(args.trace, args.output, simu, color_map, simu_tree)
+    elif args.tree != "" and args.tsv != "":
+        pop_size, input_tree = open_tsv_population_size(args.tree, args.tsv)
+        plot_trees_from_traces(args.trace, args.output, pop_size, {}, input_tree)
     else:
         plot_trees_from_traces(args.trace, args.output, {}, {}, False)

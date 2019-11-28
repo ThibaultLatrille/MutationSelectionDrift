@@ -29,7 +29,7 @@ localrules: all, all_profiles, bayescode_model, plot_profiles, plot_traces, plot
 
 rule all:
     input:
-         # EXPERIMENT + '/all_profiles',
+         EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/inference_traces',
          EXPERIMENT + '/all_correlation_matrix',
          expand(EXPERIMENT + '/inference_{model}_trees', model=[i for i in INFERENCE_MODELS if "node" in i])
@@ -101,7 +101,6 @@ rule read_profiles:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    benchmark: EXPERIMENT + "/benchmarks.inference_{model}_{polymorphism}_{chain}_read.tsv"
     log:
        out=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read.stdout',
        err=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read.stderr'
@@ -129,7 +128,6 @@ rule read_trees:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    benchmark: EXPERIMENT + "/benchmarks.inference_{model}_{polymorphism}_{chain}_read.tsv"
     log:
        out=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stdout',
        err=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stderr'
@@ -144,5 +142,7 @@ rule plot_trees:
     log:
        out=EXPERIMENT + '/std.{model}_plot_trees.stdout',
        err=EXPERIMENT + '/std.{model}_plot_trees.stderr'
+    params:
+          tsv=lambda w: ' --tree {0}/rootedtree.nhx --tsv {0}/known_population_size.tsv'.format(EXPERIMENT) if os.path.isfile(EXPERIMENT + "/known_population_size.tsv") and os.path.isfile(EXPERIMENT + "/rootedtree.nhx") else "",
     shell:
-         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.plot} && python3 {input.src}{params.tsv} --trace {input.trace} --output {output.plot} 2> {log.err} 1> {log.out}'
