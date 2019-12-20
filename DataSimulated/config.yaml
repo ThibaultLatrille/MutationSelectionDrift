@@ -1,22 +1,22 @@
 EXPERIMENT:
   COMPILE: false
 SIMULATION:
-  TREE: SimuEvol/data/trees/placnr.short.rootedtree.nhx
-  PREFERENCES: SimuEvol/data/preferences/np_5000_30.prefs
+  TREE: SimuEvol/data/trees/placnr.lht.rootedtree.nhx
+  PREFERENCES: SimuEvol/data/preferences/np_5000_498.prefs
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
   PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
   MUTATION_RATE_PER_GENERATION: 1.0e-8
-  ROOT_AGE: 300e6
-  GENERATION_TIME: 10
+  ROOT_AGE: 150e6
+  GENERATION_TIME: 5
   EXON_SIZE: 300
-  SEED: 653
+  SEED: 65489
   BRANCH_WISE_CORRELATION: false
   FIXED_POP_SIZES: false
   FIXED_MUT_RATE: false
   FIXED_GENERATION_TIME: false
 SimuFold:
   PDB_FOLDER: SimuEvol/data/pdbfiles
-  NBR_EXONS: 12
+  NBR_EXONS: 16
   NBR_GRID_STEP: 100
   POP_SIZE: 1e5
   CUT_OFF: 7.0
@@ -27,25 +27,25 @@ SimuPoly:
   BETA: 1.0
   POP_SIZE: 5000
   SAMPLE_SIZE: 20
-  NOISE_SIGMA: 0.0
-  NOISE_THETA: 0.9
+  NOISE_SIGMA: 0.2
+  NOISE_THETA: 0.5
 SimuGeo:
   NBR_GRID_STEP: 100
   POP_SIZE: 200.0
   COMPLEXITY: 3
-  NBR_EXONS: 12
+  NBR_EXONS: 16
 INFERENCE_REPLICATE:
   CHAINS: [1, 2]
   POLYMORPHISM: [false]
-  MODELS: [node]
+  MODELS: [node, aa, nodeomega]
   SIMULATORS: [SimuDiv, SimuFold, SimuGeo, SimuPoly]
 INFERENCE:
   RESTART: false
-  POINTS: 3000
+  POINTS: 4000
   PRECISION: 10
   NCAT: 50
 INFERENCE_NODE:
-  TRAITS: true
+  TRAITS: false
   FOSSILS: 0
   MOVE_ROOT_POP_SIZE: false
   CLAMP_PREFERENCES: false
@@ -54,4 +54,4 @@ INFERENCE_NODE:
   CLAMP_CORR_MATRIX: false
   ARITHMETIC: false
 PLOT:
-  BURN_IN: 200
+  BURN_IN: 300

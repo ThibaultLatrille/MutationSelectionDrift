@@ -54,10 +54,10 @@ SIMUFOLD_PARAMS += ' --nbr_exons {0}'.format(config['SimuFold']['NBR_EXONS'])
 if 'CUT_OFF' in config['SimuFold']:
     SIMUFOLD_PARAMS += ' --cut_off {0}'.format(config['SimuFold']['CUT_OFF'])
 
-SIMUGEO_PARAMS=""
+SIMUGEO_PARAMS = ""
 if 'SimuGeo' in config:
     SIMUGEO_PARAMS += '--nbr_grid_step {0}'.format(config['SimuGeo']['NBR_GRID_STEP'])
-    SIMUGEO_PARAMS += ' --pop_size {0}'.format(config['SimuGeo']['POP_SIZE'])
+    SIMUGEO_PARAMS += ' --population_size {0}'.format(config['SimuGeo']['POP_SIZE'])
     SIMUGEO_PARAMS += ' --complexity {0}'.format(config['SimuGeo']['COMPLEXITY'])
     SIMUGEO_PARAMS += ' --nbr_exons {0}'.format(config['SimuGeo']['NBR_EXONS'])
 
@@ -96,11 +96,14 @@ INFERENCE_SIMULATORS = config['INFERENCE_REPLICATE']['SIMULATORS']
 for program in ['bayescode', 'SimuEvol']:
     diff_git_dir("{0}/{1}".format(ROOT, program), "{0}/{1}".format(EXPERIMENT, program))
 
-localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol, plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
+localrules: all, all_profiles, all_traces, all_trees, make_bayescode, bayescode_model, draw_fossils, make_simuevol,
+          plot_profiles, plot_simulation, plot_traces, plot_trees, read_profiles, read_trees
+
+print(INFERENCE_MODELS)
 
 rule all:
     input:
-         # EXPERIMENT + '/all_profiles',
+         EXPERIMENT + '/all_profiles',
          EXPERIMENT + '/all_traces',
          EXPERIMENT + '/all_trees'
 
@@ -271,7 +274,8 @@ rule plot_profiles:
        out=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stdout',
        err=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stderr'
     params:
-         prefs = lambda wildcards: " --input " + PREFERENCES if (wildcards.simumode != "SimuGeo" and wildcards.simumode != "SimuFold") else ""
+          prefs=lambda wildcards: " --input " + PREFERENCES if (
+                      wildcards.simumode != "SimuGeo" and wildcards.simumode != "SimuFold") else ""
     shell:
          'mkdir -p {output.prefs} && python3 {input.src}{params.prefs} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
 
@@ -279,32 +283,7 @@ rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
     input:
          expand(EXPERIMENT + '/inference_{simumode}_{model}_profiles', simumode=INFERENCE_SIMULATORS,
-                model=INFERENCE_MODELS)
-
-rule run_inference_second_pass:
-    output: touch(EXPERIMENT + '/second_pass_{simumode}_{polymorphism}_{chain}_run')
-    input:
-         exec=EXPERIMENT + '/nodemutsel',
-         simu=rules.run_simulation.output,
-         all_profiles=EXPERIMENT + '/inference_{simumode}_aa_profiles',
-         profiles=EXPERIMENT + '/{simumode}_aa_{polymorphism}_{chain}_read.siteprofiles',
-         config=EXPERIMENT + '/config.INFERENCE'
-    params:
-          time="18-00:00", mem=5000, threads=1,
-          poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
-          prefs=lambda wildcards: EXPERIMENT + '/inference_{simumode}_aa_profiles/{simumode}_aa_{polymorphism}_{chain}_read.prefs',
-          traits=lambda wildcards, input: " --traitsfile {0}.traits.tsv".format(input.simu) if config['INFERENCE_NODE'][
-              'TRAITS'] else ""
-    benchmark: EXPERIMENT + "/benchmarks.inference.second_pass_{simumode}_{polymorphism}_{chain}_run.tsv"
-    log:
-       out=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stdout',
-       err=EXPERIMENT + '/std.{simumode}_AANode_{polymorphism}_{chain}_run.stderr'
-    shell:
-         '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{INFERENCE_NODE_PARAMS}{params.traits} --profiles {params.prefs} {output} 2> {log.err} 1> {log.out}'
-
-rule second_pass:
-    output: touch(EXPERIMENT + '/second_pass')
-    input: expand(EXPERIMENT + '/second_pass_{simumode}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
+                model=[i for i in INFERENCE_MODELS if "omega" not in i])
 
 rule read_trees:
     output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read')
@@ -336,4 +315,6 @@ rule plot_trees:
 rule all_trees:
     output: touch(EXPERIMENT + '/all_trees')
     input:
-         expand(EXPERIMENT + '/inference_{simumode}_node_trees', simumode=INFERENCE_SIMULATORS)
+         expand(EXPERIMENT + '/inference_{simumode}_{model}_trees',
+                simumode=INFERENCE_SIMULATORS,
+                model=[i for i in INFERENCE_MODELS if "node" in i])

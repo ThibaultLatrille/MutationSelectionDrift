@@ -71,6 +71,7 @@ def open_simulation(input_simu):
     t = Tree(input_simu + ".nhx", format=1)
     root_pop_size = float(t.population_size)
     simu_dict["LogPopulationSize"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
+    simu_dict["LogOmega"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
     root_age = simu_params["tree_max_distance_to_root_in_year"]
 
     simu_dict["ContrastPopulationSize"] = [
@@ -107,6 +108,7 @@ def open_simulation(input_simu):
     color_map_dict["LogGenerationTime"] = color_map_nodes
     color_map_dict["LogMutationRatePerTime"] = color_map_nodes
     color_map_dict["LogPopulationSize"] = color_map_nodes
+    color_map_dict["LogOmega"] = color_map_nodes
     return simu_dict, color_map_dict, t
 
 
