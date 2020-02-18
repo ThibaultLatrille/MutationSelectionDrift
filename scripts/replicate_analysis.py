@@ -5,7 +5,7 @@ from plot_module import *
 
 os.chdir("../DataEmpirical")
 exp_dirs = sorted(
-    set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if ("Replicates" in i) and ("Isopods" in i)]))
+    set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if ("Replicates" in i) and ("eOrthoMam" in i)]))
 print(exp_dirs)
 os.makedirs("Analysis", exist_ok=True)
 

@@ -39,7 +39,7 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             axis_filenames[feature].append(filename)
             axis_trees[feature].append(tree)
             if len([n for n in tree.traverse() if feature in n.features]) == len(list(tree.traverse())):
-                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.png".format(output_plot, filename, feature), min_max_annot=min_max_annot)
+                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.pdf".format(output_plot, filename, feature), min_max_annot=min_max_annot)
 
     for feature in axis_trees:
         axis_dict, err_dict = dict(), dict()
@@ -55,7 +55,7 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             err_dict[filename] = np.vstack((np.abs(values - min_values), np.abs(max_values - values)))
 
         if len(axis_dict) > 1:
-            path = '{0}/correlation.{1}.svg'.format(output_plot, feature)
+            path = '{0}/correlation.{1}.pdf'.format(output_plot, feature)
 
             if feature in color_map_dict:
                 plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], min_max_annot=min_max_annot,

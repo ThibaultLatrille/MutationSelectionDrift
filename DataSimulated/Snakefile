@@ -111,9 +111,8 @@ rule make_bayescode:
     output: touch(EXPERIMENT + "/make_bayescode")
     input: dir=EXPERIMENT + '/bayescode.version'
     params: compile="&& make clean && make" if COMPILE else ""
-    log: out=EXPERIMENT + '/std.bayescode.stdout', err=EXPERIMENT + '/std.bayescode.stderr'
     shell:
-         'cd {ROOT}/bayescode {params.compile} 2> {log.err} 1> {log.out}'
+         'cd {ROOT}/bayescode {params.compile}'
 
 rule bayescode_model:
     output:
@@ -131,8 +130,7 @@ rule make_simuevol:
           EXPERIMENT + '/SimuPoly'
     input: dir=EXPERIMENT + '/SimuEvol.version'
     params: compile="&& make clean && make" if COMPILE else ""
-    log: out=EXPERIMENT + '/std.SimuEvol.stdout', err=EXPERIMENT + '/std.SimuEvol.stderr'
-    shell: 'cd {ROOT}/SimuEvol {params.compile} 2> {log.err} 1> {log.out} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuFold {EXPERIMENT} && cp build/SimuGeo {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
+    shell: 'cd {ROOT}/SimuEvol {params.compile} && cp build/SimuDiv {EXPERIMENT} && cp build/SimuFold {EXPERIMENT} && cp build/SimuGeo {EXPERIMENT} && cp build/SimuPoly {EXPERIMENT}'
 
 rule build:
     input:
@@ -175,9 +173,6 @@ rule plot_simulation:
     input:
          src=ROOT + "/scripts/plot_simulation.py",
          simu=rules.run_simulation.output
-    log:
-       out=EXPERIMENT + '/std.{simumode}_plot.stdout',
-       err=EXPERIMENT + '/std.{simumode}_plot.stderr'
     shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot}'
 
 rule draw_fossils:
@@ -233,18 +228,23 @@ else:
 rule inference:
     input: expand(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
 
+rule read_traces:
+    output: EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run.trace.tsv'
+    input:
+         trace=rules.run_inference.output,
+         exec=rules.bayescode_model.output.read,
+         param_plot=EXPERIMENT + '/config.PLOT'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} --trace {input.trace}'
+
 rule plot_traces:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_traces')
     input:
          src=ROOT + "/scripts/plot_traces.py",
-         trace=expand(EXPERIMENT + '/{{simumode}}_{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS,
+         trace=expand(EXPERIMENT + '/{{simumode}}_{model}_{polymorphism}_{chain}_run.trace.tsv', chain=INFERENCE_CHAINS,
                       polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
          config=EXPERIMENT + '/config.PLOT'
-    log:
-       out=EXPERIMENT + '/std.{simumode}_inference_plot.stdout',
-       err=EXPERIMENT + '/std.{simumode}_inference_plot.stderr'
     shell:
-         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot}'
 
 rule all_traces:
     output: touch(EXPERIMENT + '/all_traces')
@@ -258,11 +258,7 @@ rule read_profiles:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
-    log:
-       out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stdout',
-       err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read.stderr'
-    shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace}'
 
 rule plot_profiles:
     output: prefs=directory(EXPERIMENT + '/inference_{simumode}_{model}_profiles')
@@ -270,14 +266,11 @@ rule plot_profiles:
          src=ROOT + "/scripts/plot_profiles.py",
          profiles=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read.siteprofiles',
                          chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
-    log:
-       out=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stdout',
-       err=EXPERIMENT + '/std.{simumode}_{model}_inferred_prefs.stderr'
     params:
           prefs=lambda wildcards: " --input " + PREFERENCES if (
                       wildcards.simumode != "SimuGeo" and wildcards.simumode != "SimuFold") else ""
     shell:
-         'mkdir -p {output.prefs} && python3 {input.src}{params.prefs} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.prefs} && python3 {input.src}{params.prefs} --infer {input.profiles} --output {output.prefs}'
 
 rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
@@ -291,11 +284,7 @@ rule read_trees:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    benchmark: EXPERIMENT + "/benchmarks.inference_{simumode}_{model}_{polymorphism}_{chain}_read.tsv"
-    log:
-       out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stdout',
-       err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_read_trees.stderr'
-    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace}'
 
 rule plot_trees:
     output: plot=directory(EXPERIMENT + '/inference_{simumode}_{model}_trees')
@@ -305,12 +294,9 @@ rule plot_trees:
          trace=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS,
                       polymorphism=INFERENCE_POLYMORPHISM),
          read=expand(EXPERIMENT + '/{{simumode}}_{{model}}_{polymorphism}_{chain}_read', chain=INFERENCE_CHAINS,
-                     polymorphism=INFERENCE_POLYMORPHISM),
-    log:
-       out=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stdout',
-       err=EXPERIMENT + '/std.{simumode}_{model}_plot_trees.stderr'
+                     polymorphism=INFERENCE_POLYMORPHISM)
     shell:
-         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --simulation {input.simu} --output {output.plot} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --simulation {input.simu} --output {output.plot}'
 
 rule all_trees:
     output: touch(EXPERIMENT + '/all_trees')

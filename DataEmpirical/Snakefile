@@ -65,17 +65,26 @@ rule run_inference:
 rule inference:
     input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
 
+rule read_traces:
+    output: EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.trace.tsv'
+    input:
+         trace=rules.run_inference.output,
+         exec=rules.bayescode_model.output.read,
+         param_plot=EXPERIMENT + '/config.PLOT'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} --trace {input.trace} || true'
+
 rule plot_traces:
     output: plot=directory(EXPERIMENT + '/inference_traces')
     input:
          src=ROOT + "/scripts/plot_traces.py",
-         trace=expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
+         trace=expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.trace.tsv', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS),
          config=EXPERIMENT + '/config.PLOT'
-    log:
-       out=EXPERIMENT + '/std.inference_plot.stdout',
-       err=EXPERIMENT + '/std.inference_plot.stderr'
     shell:
-         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot}'
+
+rule all_traces:
+    input: EXPERIMENT + '/inference_traces'
+
 
 rule plot_correlation_matrix:
     output: plot=touch(CORRELATION + '/{model}_{polymorphism}_{chain}')
@@ -83,11 +92,8 @@ rule plot_correlation_matrix:
          src=ROOT + "/scripts/plot_correlation_matrix.py",
          trace=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run',
          config=EXPERIMENT + '/config.PLOT'
-    log:
-       out=EXPERIMENT + '/std.correlation_matrix_{model}_{polymorphism}_{chain}_plot.stdout',
-       err=EXPERIMENT + '/std.correlation_matrix_{model}_{polymorphism}_{chain}_plot.stderr'
     shell:
-         'python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN} 2> {log.err} 1> {log.out}'
+         'python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN}'
 
 
 rule all_correlation_matrix:
@@ -101,21 +107,15 @@ rule read_profiles:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    log:
-       out=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read.stdout',
-       err=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read.stderr'
-    shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace} 2> {log.err} 1> {log.out}'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} -s --profiles {output} {input.trace}'
 
 rule plot_profiles:
     output: prefs=directory(EXPERIMENT + '/inference_{model}_profiles')
     input:
          src=ROOT + "/scripts/plot_profiles.py",
          profiles=expand(EXPERIMENT + '/{{model}}_{polymorphism}_{chain}_read.siteprofiles', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM)
-    log:
-       out=EXPERIMENT + '/std.{model}_inferred_prefs.stdout',
-       err=EXPERIMENT + '/std.{model}_inferred_prefs.stderr'
     shell:
-         'mkdir -p {output.prefs} && python3 {input.src} --infer {input.profiles} --output {output.prefs} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.prefs} && python3 {input.src} --infer {input.profiles} --output {output.prefs}'
 
 rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
@@ -128,10 +128,7 @@ rule read_trees:
          trace=rules.run_inference.output,
          exec=rules.bayescode_model.output.read,
          param_plot=EXPERIMENT + '/config.PLOT'
-    log:
-       out=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stdout',
-       err=EXPERIMENT + '/std.{model}_{polymorphism}_{chain}_read_trees.stderr'
-    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} 2> {log.err} 1> {log.out} || true'
+    shell: '{input.exec} --burnin {PLOT_BURN_IN} --newick {input.trace} || true'
 
 rule plot_trees:
     output: plot=directory(EXPERIMENT + '/inference_{model}_trees')
@@ -139,10 +136,7 @@ rule plot_trees:
          src=ROOT + "/scripts/plot_trees.py",
          trace=expand(EXPERIMENT + '/{{model}}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
          read=expand(EXPERIMENT + '/{{model}}_{polymorphism}_{chain}_read', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM),
-    log:
-       out=EXPERIMENT + '/std.{model}_plot_trees.stdout',
-       err=EXPERIMENT + '/std.{model}_plot_trees.stderr'
     params:
           tsv=lambda w: ' --tree {0}/rootedtree.nhx --tsv {0}/known_population_size.tsv'.format(EXPERIMENT) if os.path.isfile(EXPERIMENT + "/known_population_size.tsv") and os.path.isfile(EXPERIMENT + "/rootedtree.nhx") else "",
     shell:
-         'mkdir -p {output.plot} && python3 {input.src}{params.tsv} --trace {input.trace} --output {output.plot} 2> {log.err} 1> {log.out}'
+         'mkdir -p {output.plot} && python3 {input.src}{params.tsv} --trace {input.trace} --output {output.plot}'

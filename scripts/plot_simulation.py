@@ -26,7 +26,7 @@ def plot_simulation(input_simu, args_output):
                 root_pop_size = float(getattr(t.get_tree_root(), arg))
                 for n in t.traverse():
                     n.add_feature("Log" + arg, np.log(float(getattr(n, arg)) / root_pop_size))
-                plot_tree(t, "Log" + arg, "{0}/tree.{1}.png".format(args_output, arg), min_max_annot=min_max_annot)
+                plot_tree(t, "Log" + arg, "{0}/tree.{1}.pdf".format(args_output, arg), min_max_annot=min_max_annot)
             if len(values) > 1 and ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
