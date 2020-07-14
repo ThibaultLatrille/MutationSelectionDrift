@@ -1,6 +1,6 @@
 # Dockerfile
 FROM debian
-eOrthoMam
+
 # install necessary tools
 RUN apt-get update
 RUN apt-get install -qq -y git make cmake clang openmpi-bin openmpi-common

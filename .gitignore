@@ -10,6 +10,8 @@
 /SimuEvol
 /notebooks
 /manuscript
+/coevol
+.snakemake/
 DataEmpirical/sp*
 DataEmpirical/47SP
 DataEmpirical/Benitiere*
@@ -21,10 +23,16 @@ DataEmpirical/*/singlegene_alignments
 DataEmpirical/*/gblocks
 DataEmpirical/*/fasta
 DataEmpirical/*/.snakemake
+DataEmpirical/Primates*/bayescode_*
+DataEmpirical/Primates*/coevol_*
 DataSimulated/BackUp
 DataSimulated/SimuRelax
+DataSimulated/matrices/
+DataSimulated/analyse/
 Data*/Experiments/*
+Data*/Experiments.Legacy
 Data*/Analysis
+Data*/Traces
 orthomam.tsv
 *.fa
 *.bestTree

@@ -31,7 +31,7 @@ def export_ali(filepath, ali_dict):
                     print("Unexpected character {0} in sequence {1} at position {2}".format(n, name, i + 1))
 
 
-def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht, calibs, intersection, screen, sbatch, nbr_cpu):
+def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht, calibs, intersection, screen, sbatch, nbr_cpu, random_state):
     root_path = os.getcwd() + "/" + name
     tree = Tree("{0}/{1}".format(root_path, tree_name), format=1)
     print("{0} extant species found for the rooted tree/".format(len(tree)))
@@ -49,6 +49,7 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
         replicate = len(genes)
 
     for rep in range(replicate):
+        random_state += 654
         experiment = prefix + "_{0}_{1}_{2}_Sample{3}_Replicates{4}_Id{5}".format(name, tree_name, cds_list, sample,
                                                                                  replicate, rep)
         exp_path = os.getcwd() + '/Experiments/' + experiment
@@ -75,7 +76,7 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
         if sample == -1:
             vals = [genes.loc[rep, :]]
         else:
-            vals = genes.sample(sample).values
+            vals = genes.sample(sample, random_state=random_state).values
         for selected in vals:
             alignments.append(import_ali("{0}/singlegene_alignments/{1}.ali".format(root_path, selected[0])))
             taxa = taxa.intersection(alignments[-1].keys()) if intersection else taxa.union(alignments[-1].keys())
@@ -130,20 +131,21 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--prefix', required=False, type=str, default="Omega", dest="prefix")
-    parser.add_argument('-n', '--name', required=False, type=str, default="sp47_Insect", dest="name")
-    # ["sp25_Vertebrate", "sp73_OrthoMam", "sp47_Insect", "OrthoMam", "Isopods", "Primates"]
-    parser.add_argument('--sample', required=False, type=int, default=24, dest="sample")
+    parser.add_argument('-p', '--prefix', required=False, type=str, default="Cat40", dest="prefix")
+    parser.add_argument('-n', '--name', required=False, type=str, default="Drosophila_v3", dest="name")
+    # name can be one of ["Vertebrates", "47SP", "OrthoMam", "Isopods", "Primates"]
+    parser.add_argument('--sample', required=False, type=int, default=18, dest="sample")
     parser.add_argument('--replicate', required=False, type=int, default=4, dest="replicate")
-    parser.add_argument('--tree', required=False, type=str, default="rootedtree.nhx", dest="tree")
-    parser.add_argument('--cds', required=False, type=str, default="", dest="cds")
+    parser.add_argument('--tree', required=False, type=str, default="rootedtree.lht.nhx", dest="tree")
+    parser.add_argument('--cds', required=False, type=str, default="cds.600.list", dest="cds")
     parser.add_argument('--lht', required=False, type=str, default="life_history_traits.tsv", dest="lht")
     parser.add_argument('--calibs', required=False, type=str, default="", dest="calibs")
     parser.add_argument('--intersection', required=False, type=bool, default=False, dest="intersection")
-    parser.add_argument('-s', '--screen', required=False, type=bool, default=False, dest="screen")
-    parser.add_argument('-b', '--sbatch', required=False, type=bool, default=False, dest="sbatch")
+    parser.add_argument('-s', '--screen', required=False, type=bool, default=True, dest="screen")
+    parser.add_argument('-b', '--sbatch', required=False, type=bool, default=True, dest="sbatch")
     parser.add_argument('-c', '--nbr_cpu', required=False, type=int, default=4, dest="nbr_cpu")
+    parser.add_argument('--random_state', required=False, type=int, default=0, dest="random_state")
 
     args = parser.parse_args()
     create_experiment(args.prefix, args.name, args.sample, args.replicate, args.tree, args.cds, args.lht, args.calibs,
-                      args.intersection, args.screen, args.sbatch, args.nbr_cpu)
+                      args.intersection, args.screen, args.sbatch, args.nbr_cpu, args.random_state)

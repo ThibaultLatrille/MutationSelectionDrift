@@ -33,7 +33,7 @@ def coverage(filepath):
 
 
 aln_folder = "gblocks"
-folder_path = os.path.abspath('..') + "/DataEmpirical/Drosophila_v2"
+folder_path = os.path.abspath('..') + "/DataEmpirical/Drosophila_v3"
 assert (os.path.isdir(folder_path))
 
 for aln in os.listdir(folder_path + '/' + aln_folder):

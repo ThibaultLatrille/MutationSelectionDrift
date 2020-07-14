@@ -7,8 +7,6 @@ from glob import glob
 from ete3 import Tree
 from plot_module import plot_correlation, plot_tree, to_float
 
-min_max_annot = ()
-
 
 def remove_units(str):
     return str.replace("(g)", "").replace("(days)", "").replace("(yrs)", "").replace("(kg)", "").replace("(cm)", "")
@@ -39,7 +37,7 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             axis_filenames[feature].append(filename)
             axis_trees[feature].append(tree)
             if len([n for n in tree.traverse() if feature in n.features]) == len(list(tree.traverse())):
-                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.pdf".format(output_plot, filename, feature), min_max_annot=min_max_annot)
+                plot_tree(tree.copy(), feature, "{0}/{1}.{2}.pdf".format(output_plot, filename, feature))
 
     for feature in axis_trees:
         axis_dict, err_dict = dict(), dict()
@@ -58,10 +56,9 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
             path = '{0}/correlation.{1}.pdf'.format(output_plot, feature)
 
             if feature in color_map_dict:
-                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], min_max_annot=min_max_annot,
-                                 global_xy=False)
+                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], global_xy=False)
             else:
-                plot_correlation(path, axis_dict, err_dict, [], min_max_annot=(), global_xy=False)
+                plot_correlation(path, axis_dict, err_dict, [], global_xy=False)
 
 
 def open_simulation(input_simu):
@@ -141,7 +138,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.simulation != "":
         simu, color_map, simu_tree = open_simulation(args.simulation)
-        plot_trees_from_traces(args.trace, args.output, simu, color_map, simu_tree)
+        plot_trees_from_traces(args.trace, args.output, simu, {}, simu_tree)
     elif args.tree != "" and args.tsv != "":
         pop_size, input_tree = open_tsv_population_size(args.tree, args.tsv)
         plot_trees_from_traces(args.trace, args.output, pop_size, {}, input_tree)

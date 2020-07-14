@@ -22,7 +22,7 @@ table.writelines("\\hline\n")
 table.writelines(" & ".join(heading) + "\\\\\n")
 table.writelines("\\hline\n")
 
-for exp in sorted([d for d in os.listdir("Experiments") if "Gen5Ma" in d]):
+for exp in sorted([d for d in os.listdir("Experiments")]):
     name_traces = dict()
     for filepath in sorted(glob("Experiments/" + exp + "/*.trace.tsv")):
         models_counts = [m for m in models if os.path.basename(filepath).count(m + "_") > 0]

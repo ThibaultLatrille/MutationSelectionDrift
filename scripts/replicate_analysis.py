@@ -5,9 +5,9 @@ from plot_module import *
 
 os.chdir("../DataEmpirical")
 exp_dirs = sorted(
-    set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if ("Replicates" in i) and ("eOrthoMam" in i)]))
-print(exp_dirs)
+    set(["_".join(i.split("_")[:-1]) for i in os.listdir("Experiments") if ("Replicates" in i) and ("Kappa" in i)]))
 os.makedirs("Analysis", exist_ok=True)
+file_format = "pdf"
 
 
 def remove_units(str):
@@ -15,7 +15,6 @@ def remove_units(str):
 
 
 dataset = pd.read_csv("Isopods/dataset.tsv", delimiter="\t")
-
 
 for exp in exp_dirs:
     nhx_dict = dict()
@@ -58,9 +57,10 @@ for exp in exp_dirs:
             df = pd.DataFrame.from_dict(taxa_dict)
             for x in ["eco", "pig", "eye"]:
                 df[x] = pd.Series([dataset[dataset['code'] == i].iloc[0][x] for i in tree.get_leaf_names()])
-                df.boxplot(column=list(taxa_dict.keys()), by=x, figsize=(len(taxa_dict), 2), layout=(1, len(taxa_dict)), notch=True)
+                df.boxplot(column=list(taxa_dict.keys()), by=x, figsize=(len(taxa_dict), 2), layout=(1, len(taxa_dict)),
+                           notch=True)
                 plt.tight_layout()
-                plt.savefig("Analysis/{0}/{1}.{2}.svg".format(exp, tree_name, x))
+                plt.savefig("Analysis/{0}/{1}.{2}.{3}".format(exp, tree_name, x, file_format), format=file_format)
                 plt.clf()
-        plot_correlation("Analysis/" + exp + "/" + tree_name.replace(".nhx", ".svg"), axis_dict, err_dict, [],
-                         global_xy=True)
+        plot_correlation("Analysis/" + exp + "/" + tree_name.replace(".nhx", '.' + file_format), axis_dict, err_dict,
+                         [], global_xy=True)

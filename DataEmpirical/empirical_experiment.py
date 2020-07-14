@@ -55,12 +55,12 @@ def create_experiment(prefix, name, cds_name, tree_name, lht, calibs, screen, sb
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--prefix', required=False, type=str, default="Ncat50", dest="prefix")
-    parser.add_argument('-n', '--name', required=False, type=str, default="Guinet", dest="name")
+    parser.add_argument('-p', '--prefix', required=False, type=str, default="Cat50NoLHT", dest="prefix")
+    parser.add_argument('-n', '--name', required=False, type=str, default="Primates", dest="name")
     parser.add_argument('--cds', required=False, type=str, default="CDS.ali", dest="cds")
     parser.add_argument('--tree', required=False, type=str, default="rootedtree.nhx", dest="tree")
-    parser.add_argument('--lht', required=False, type=str, default="life_history_traits.tsv", dest="lht")
-    parser.add_argument('--calibs', required=False, type=str, default="calibs.tsv", dest="calibs")
+    parser.add_argument('--lht', required=False, type=str, default="", dest="lht")
+    parser.add_argument('--calibs', required=False, type=str, default="", dest="calibs")
     parser.add_argument('-s', '--screen', required=False, type=bool, default=False, dest="screen")
     parser.add_argument('-b', '--sbatch', required=False, type=bool, default=False, dest="sbatch")
     parser.add_argument('-c', '--nbr_cpu', required=False, type=int, default=4, dest="nbr_cpu")

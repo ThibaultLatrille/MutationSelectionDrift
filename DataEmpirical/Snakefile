@@ -11,9 +11,23 @@ os.makedirs(CORRELATION, exist_ok=True)
 
 configfile: open_config(EXPERIMENT, 'config.yaml')
 
-INFERENCE_PARAMS = ' -u {0}'.format(config['INFERENCE']['POINTS'])
+print(config)
+INFERENCE_PARAMS = ' -u {0}'.format(config["INFERENCE"]["POINTS"])
 MUTSEL_PARAMS = ' --precision {0}'.format(config['INFERENCE']['PRECISION'])
 MUTSEL_PARAMS += ' --ncat {0}'.format(config['INFERENCE']['NCAT'])
+
+INFERENCE_NODE_PARAMS = " "
+if 'INFERENCE_NODE' in config:
+    if config['INFERENCE_NODE']['MOVE_ROOT_POP_SIZE']:
+        INFERENCE_NODE_PARAMS += ' --move_root_pop_size'
+    if config['INFERENCE_NODE']['CLAMP_POP_SIZES']:
+        INFERENCE_NODE_PARAMS += ' --clamp_pop_sizes'
+    if config['INFERENCE_NODE']['CLAMP_NUC_MATRIX']:
+        INFERENCE_NODE_PARAMS += ' --clamp_nuc_matrix'
+    if config['INFERENCE_NODE']['CLAMP_CORR_MATRIX']:
+        INFERENCE_NODE_PARAMS += ' --clamp_corr_matrix'
+    if config['INFERENCE_NODE']['ARITHMETIC']:
+        INFERENCE_NODE_PARAMS += ' --arithmetic'
 
 INFERENCE_CHAINS = config['INFERENCE_REPLICATE']['CHAINS']
 INFERENCE_MODELS = config['INFERENCE_REPLICATE']['MODELS']
@@ -47,20 +61,34 @@ rule build:
          expand(EXPERIMENT + '/{model}mutsel', model=INFERENCE_MODELS),
          expand(EXPERIMENT + '/read{model}mutsel', model=INFERENCE_MODELS)
 
-rule run_inference:
-    output: touch(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run')
-    input:
-         exec=EXPERIMENT + '/{model}mutsel',
-         config=EXPERIMENT + '/config.INFERENCE'
-    params:
-          time="18-0:00", mem=1500, threads=1,
-          mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
-          poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
-          traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
-          calibs=lambda w: ' --fossils {0}/calibs.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/calibs.tsv") else "",
-    benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
-    log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
-    shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.traits}{params.calibs} {output} 2> {log.err} 1> {log.out}'
+if 'RESTART' in config['INFERENCE'] and config['INFERENCE']['RESTART']:
+    rule run_inference:
+        output: touch(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run')
+        input:
+             exec=EXPERIMENT + '/{model}mutsel',
+             config=EXPERIMENT + '/config.INFERENCE'
+        params:
+              time="18-0:00", mem=1500, threads=1,
+        benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
+        log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
+        shell: '{input.exec} {output} 2> {log.err} 1> {log.out}'
+
+else:
+    rule run_inference:
+        output: touch(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run')
+        input:
+             exec=EXPERIMENT + '/{model}mutsel',
+             config=EXPERIMENT + '/config.INFERENCE'
+        params:
+              time="18-0:00", mem=1500, threads=1,
+              mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
+              poly=lambda w: " -p" if w.polymorphism.lower() == 'true' else "",
+              node=lambda wildcards: INFERENCE_NODE_PARAMS if wildcards.model == "node" else "",
+              traits=lambda w: ' --traitsfile {0}/life_history_traits.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/life_history_traits.tsv") else "",
+              calibs=lambda w: ' --fossils {0}/calibs.tsv'.format(EXPERIMENT) if ("node" in w.model) and os.path.isfile(EXPERIMENT + "/calibs.tsv") else "",
+        benchmark: EXPERIMENT + "/benchmarks.inference.{model}_{polymorphism}_{chain}_run.tsv"
+        log: out=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stdout', err=EXPERIMENT + '/{model}_{polymorphism}_{chain}_run.stderr'
+        shell: '{input.exec} -a {EXPERIMENT}/CDS.ali -t {EXPERIMENT}/rootedtree.nhx {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.traits}{params.calibs} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{model}_{polymorphism}_{chain}_run', chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)

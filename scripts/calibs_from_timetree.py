@@ -6,9 +6,9 @@ from ete3 import Tree
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-n', '--nwk', default="../DataEmpirical/OrthoMam/calibs.lht.nwk",
+    parser.add_argument('-n', '--nwk', default="../DataEmpirical/PrimatesBinaryLHTShort/rootedtree.nwk",
                         required=False, type=str, dest="nwk")
-    parser.add_argument('-t', '--tree', default="../DataEmpirical/OrthoMam/rootedtree.lht.nhx",
+    parser.add_argument('-t', '--tree', default="../DataEmpirical/PrimatesBinaryLHTShort/rootedtree.nwk.annotated",
                         required=False, type=str, dest="tree")
     args = parser.parse_args()
     tree = Tree(args.tree, format=1)
@@ -22,7 +22,8 @@ if __name__ == '__main__':
             except StopIteration:
                 leaf.name = next(n for n in tree_leaf_names if leaf.name.split("_")[1] == n.split("_")[1])
     assert(set(nwk.get_leaf_names()) == tree_leaf_names)
-    df = []
+    root_age = nwk.get_closest_leaf()[1]
+    df = [["Root", root_age, root_age, root_age]]
     for n in nwk.iter_descendants(strategy='postorder'):
         if not n.is_leaf():
             name = tree.get_common_ancestor(n.get_leaf_names()).name
@@ -30,7 +31,7 @@ if __name__ == '__main__':
                 print("Node " + name + " is attached to it's parent, thus it's discarded.")
                 continue
             age = n.get_closest_leaf()[1]
-            df += [[name, age, age * 0.9, age * 1.1]]
+            df += [[name, age, age, age]]
 
     header = ["NodeName", "Age", "LowerBound", "UpperBound"]
     pd.DataFrame(df).to_csv(args.nwk.replace(".nwk", ".tsv"), index=False, header=header, sep="\t")

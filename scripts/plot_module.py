@@ -387,10 +387,12 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
             ha='center', size=font_size)
 
     ax.set_axis_off()
-    plt.tight_layout()
+    # plt.tight_layout()
     color_map._A = []
     cbar = fig.colorbar(color_map, orientation='horizontal', pad=0, shrink=0.6)
     cbar.ax.set_xlabel(feature, labelpad=5, size=font_size * 1.2)
     plt.tight_layout()
-    plt.savefig(outputpath, format=outputpath[outputpath.rfind('.') + 1:])
+    for o in fig.findobj():
+        o.set_clip_on(False)
+    plt.savefig(outputpath, format=outputpath[outputpath.rfind('.') + 1:], bbox_inches='tight')
     plt.close("all")

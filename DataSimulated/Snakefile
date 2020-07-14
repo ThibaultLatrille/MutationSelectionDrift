@@ -1,13 +1,13 @@
 import os
-
 ROOT = os.path.abspath('../../..')
 
 import sys
-
 sys.path.append(ROOT)
 from scripts.snakemake_module import *
 
 EXPERIMENT = os.path.abspath('.')
+CORRELATION = EXPERIMENT + "/CorrelationMatrices"
+os.makedirs(CORRELATION, exist_ok=True)
 
 configfile: open_config(EXPERIMENT, 'config.yaml')
 
@@ -103,8 +103,15 @@ print(INFERENCE_MODELS)
 
 rule all:
     input:
+        expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
+        EXPERIMENT + '/all_correlation_matrix',
+
+rule all_old:
+    input:
          EXPERIMENT + '/all_profiles',
-         EXPERIMENT + '/all_traces',
+         expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
+          expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
+         EXPERIMENT + '/all_correlation_matrix',
          EXPERIMENT + '/all_trees'
 
 rule make_bayescode:
@@ -188,13 +195,27 @@ rule draw_fossils:
         df = df.sample(n=min(config['INFERENCE_NODE']['FOSSILS'], df.shape[0]), random_state=seed)
         df.to_csv(input.simu[0] + ".fossils.tsv.drawn", sep="\t", index=False)
 
+rule draw_traits:
+    output: EXPERIMENT + "/{simumode}_exp.traits.tsv.drawn"
+    input:
+         simu=rules.run_simulation.output,
+         config=EXPERIMENT + '/config.INFERENCE_NODE'
+    run:
+        import pandas as pd
+
+        seed = 6584
+        df = pd.read_csv(input.simu[0] + ".traits.tsv", sep="\t")
+        df = df.sample(n=min(config['INFERENCE_NODE']['NBR_TRAITS'] if 'NBR_TRAITS' in config['INFERENCE_NODE'] else 99999, df.shape[0]), random_state=seed)
+        df.to_csv(input.simu[0] + ".traits.tsv.drawn", sep="\t", index=False)
+
 if config['INFERENCE']['RESTART']:
     rule run_inference:
         output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run')
         input:
              exec=rules.bayescode_model.output.model,
              simu=rules.run_simulation.output,
-             fossils=rules.draw_fossils.output
+             fossils=rules.draw_fossils.output,
+             traits=rules.draw_traits.output
         params:
               time="18-00:00", mem=1500, threads=1,
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
@@ -209,21 +230,23 @@ else:
              exec=rules.bayescode_model.output.model,
              simu=rules.run_simulation.output,
              fossils=rules.draw_fossils.output,
+             traits=rules.draw_traits.output,
              config=EXPERIMENT + '/config.INFERENCE'
         params:
               time="18-00:00", mem=1500, threads=1,
+              ali=lambda w: ' -a {input.simu}.ali ' if ("nodetraits" != w.model) else ' --df {0} '.format(config['INFERENCE_NODE']['DOF']) ,
               mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
               poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
               node=lambda wildcards: INFERENCE_NODE_PARAMS if wildcards.model == "node" else "",
-              traits=lambda wildcards, input: " --traitsfile {0}.traits.tsv".format(input.simu) if (
-                      wildcards.model == "node" and config['INFERENCE_NODE']['TRAITS']) else "",
-              fossils=lambda wildcards, input: " --fossils {0}.fossils.tsv.drawn".format(input.simu) if (
-                      wildcards.model == "node" and config['INFERENCE_NODE']['FOSSILS'] > 0) else ""
+              traits=lambda wildcards, input: " --traitsfile {0}".format(input.traits) if (
+                      "node" in wildcards.model and config['INFERENCE_NODE']['TRAITS']) else "",
+              fossils=lambda wildcards, input: " --fossils {0}".format(input.fossils) if (
+                      "node" in wildcards.model and config['INFERENCE_NODE']['FOSSILS'] > 0) else ""
         benchmark: EXPERIMENT + "/benchmarks.inference.{simumode}_{model}_{polymorphism}_{chain}_run.tsv"
         log:
              out=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stdout',
              err=EXPERIMENT + '/std.{simumode}_{model}_{polymorphism}_{chain}_run.stderr'
-        shell: '{input.exec} -a {input.simu}.ali {INFERENCE_PARAMS}{params.poly}{params.mutsel}{params.node}{params.traits}{params.fossils} {output} 2> {log.err} 1> {log.out}'
+        shell: '{input.exec} {INFERENCE_PARAMS}{params.ali}{params.poly}{params.mutsel}{params.node}{params.traits}{params.fossils} {output} 2> {log.err} 1> {log.out}'
 
 rule inference:
     input: expand(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=INFERENCE_MODELS)
@@ -246,11 +269,20 @@ rule plot_traces:
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --output {output.plot}'
 
-rule all_traces:
-    output: touch(EXPERIMENT + '/all_traces')
+rule plot_correlation_matrix:
+    output: plot=touch(CORRELATION + '/{simumode}_{model}_{polymorphism}_{chain}')
     input:
-         expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
-         expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS)
+         src=ROOT + "/scripts/plot_correlation_matrix.py",
+         trace=EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_run',
+         config=EXPERIMENT + '/config.PLOT'
+    shell:
+         'python3 {input.src} --trace {input.trace} --output {output.plot} --burn_in {PLOT_BURN_IN}'
+
+
+rule all_correlation_matrix:
+    output: plot=touch(EXPERIMENT + '/all_correlation_matrix')
+    input:
+         trace=expand(CORRELATION + '/{simumode}_{model}_{polymorphism}_{chain}', simumode=INFERENCE_SIMULATORS, chain=INFERENCE_CHAINS, polymorphism=INFERENCE_POLYMORPHISM, model=[i for i in INFERENCE_MODELS if "node" in i])
 
 rule read_profiles:
     output: EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read.siteprofiles'
@@ -276,7 +308,7 @@ rule all_profiles:
     output: touch(EXPERIMENT + '/all_profiles')
     input:
          expand(EXPERIMENT + '/inference_{simumode}_{model}_profiles', simumode=INFERENCE_SIMULATORS,
-                model=[i for i in INFERENCE_MODELS if "omega" not in i])
+                model=[i for i in INFERENCE_MODELS if i in ["node", "aa"]])
 
 rule read_trees:
     output: touch(EXPERIMENT + '/{simumode}_{model}_{polymorphism}_{chain}_read')

@@ -1,13 +1,8 @@
 #!python3
 from ete3 import Tree
 from plot_module import plot_correlation, plot_tree, convertible_to_float
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import argparse
-import os
-
-min_max_annot = ()
 
 
 def plot_simulation(input_simu, args_output):
@@ -26,14 +21,11 @@ def plot_simulation(input_simu, args_output):
                 root_pop_size = float(getattr(t.get_tree_root(), arg))
                 for n in t.traverse():
                     n.add_feature("Log" + arg, np.log(float(getattr(n, arg)) / root_pop_size))
-                plot_tree(t, "Log" + arg, "{0}/tree.{1}.pdf".format(args_output, arg), min_max_annot=min_max_annot)
+                plot_tree(t, "Log" + arg, "{0}/tree.{1}.pdf".format(args_output, arg))
             if len(values) > 1 and ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
-    der_pop_size = [(np.log10(float(n.population_size)) - float(n.Branch_LogNe)) for n in t.traverse() if
-                    not n.is_root()]
-    plot_correlation("{0}/correlation.Ne.dNdS.svg".format(args_output), branch_dict, {}, der_pop_size,
-                     min_max_annot=[0, 1.0], global_xy=False)
+    plot_correlation("{0}/correlation.Ne.dNdS.pdf".format(args_output), branch_dict, {}, {}, global_xy=False)
 
 
 if __name__ == '__main__':

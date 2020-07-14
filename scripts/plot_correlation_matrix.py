@@ -2,18 +2,8 @@
 import argparse
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib
-
-matplotlib.rcParams['font.family'] = 'monospace'
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import os
 from subprocess import run
-my_dpi = 128
-# 'RdYlGn'
-color_map = 'RdYlGn'
-sns.set()
 
 
 def partial_cov_from_precision_matrix(p):
@@ -32,39 +22,8 @@ def corr_from_cov_matrix(p):
     return corr_matrix
 
 
-def save_heatmap(mean_matrix, matrix_list, names, output_name):
-    p_values = np.zeros(mean_matrix.shape, dtype=np.float64)
-    for i in range(mean_matrix.shape[0]):
-        for j in range(mean_matrix.shape[1]):
-            if i == j:
-                p_values[i][j] = None
-            else:
-                signs = np.sum([np.sign(mean_matrix[i][j]) != np.sign(m[i][j]) for m in matrix_list])
-                p_values[i][j] = signs / len(matrix_list)
-
-    sns.heatmap(pd.DataFrame(p_values, index=names, columns=names), cmap=color_map, annot=mean_matrix, linewidths=.5,
-                vmin=0.001, vmax=0.05)
-    plt.savefig(output_name + ".pvalues.svg", format='svg')
-    plt.clf()
-    if np.max(np.abs(mean_matrix)) <= 1:
-        for i in range(mean_matrix.shape[0]):
-            mean_matrix[i][i] = None
-        sns.heatmap(pd.DataFrame(mean_matrix, index=names, columns=names), annot=mean_matrix, cmap=color_map,
-                    linewidths=.5, vmin=-1, vmax=1)
-    else:
-        sns.heatmap(pd.DataFrame(mean_matrix, index=names, columns=names), annot=mean_matrix, cmap=color_map,
-                    linewidths=.5)
-    plt.savefig(output_name + ".svg", format='svg')
-    plt.clf()
-    plt.close('all')
-
-
 def tex_f(f):
-    if 1e-3 < abs(f) < 1e3:
-        return "{0:.2g}".format(f)
-    else:
-        base, exponent = "{0:.2e}".format(f).split("e")
-        return r"{0} \times 10^{{{1}}}".format("{0:.2g}".format(float(base)), int(exponent))
+    return "{0:.3g}".format(f)
 
 
 def format_header(s):
@@ -74,18 +33,16 @@ def format_header(s):
         return "$\\omega$"
     elif s == "LogMutationRate":
         return "$\\mu$"
+    elif s == "piS":
+        return "$\\pi_{S}$"
+    elif s == "piNpiS":
+        return "$\\pi_{N}/\\pi_{S}$"
     else:
         return "\\\\".join(s.split("_"))
 
 
-def save_latex(mean_matrix, matrix_list, names, output_name):
-    table = open(output_name + ".tex", 'w')
-    table.writelines("\\documentclass[USLetter,5pt]{article}\n"
-                     "\\usepackage{adjustbox}\n")
-    table.writelines("\\newcommand{\\specialcell}[2][c]{%\n\\begin{tabular}[#1]{@{}c@{}}#2\\end{tabular}}\n")
-    table.writelines("\\begin{document}\n")
-
-    heading = [""] + ["\\specialcell{" + format_header(n) + "}" for n in names]
+def save_latex(table, matrix_list, names, output_name, plot_diag=False, disp_pval=True):
+    heading = ["\\specialcell{" + format_header(n) + "}" for n in [output_name] + names]
     table.writelines("\\begin{table}[ht]\n\\centering\n\\begin{adjustbox}{width = 1\\textwidth}\n")
     table.writelines("\\begin{tabular}{|c|" + "c" * len(names) + "|}\n")
     table.writelines("\\hline\n")
@@ -94,13 +51,15 @@ def save_latex(mean_matrix, matrix_list, names, output_name):
     threshold_1 = 0.05
     threshold_2 = 0.025
     assert (threshold_2 < threshold_1)
-    for i in range(mean_matrix.shape[0]):
+
+    for i in range(matrix_list[0].shape[0]):
         elts = ["\\specialcell{" + format_header(names[i]) + "}"]
-        for j in range(mean_matrix.shape[1]):
-            if i != j:
-                pval = np.sum([np.sign(mean_matrix[i][j]) != np.sign(m[i][j]) for m in matrix_list]) / len(matrix_list)
-                elt = "$" + tex_f(mean_matrix[i][j])
-                if pval < threshold_1:
+        for j in range(matrix_list[0].shape[1]):
+            if i < j or (i == j and plot_diag):
+                x = np.mean([m[i][j] for m in matrix_list])
+                pval = np.sum([np.sign(x) != np.sign(m[i][j]) for m in matrix_list]) / len(matrix_list)
+                elt = "$" + tex_f(x)
+                if disp_pval and pval < threshold_1:
                     elt += "^{*"
                     if pval < threshold_2:
                         elt += "*"
@@ -111,14 +70,11 @@ def save_latex(mean_matrix, matrix_list, names, output_name):
         table.writelines(" & ".join(elts) + "\\\\\n")
     table.writelines("\\hline\n")
     table.writelines("\\end{tabular}\n")
-    table.writelines("\\end{adjustbox}\n" +
-                     "\\caption{" +
-                     "Asterisks indicate strength of support ($^{*} pp > " + "{0}".format(1 - threshold_1) +
-                     "$, $^{**} pp > " + "{0}".format(1 - threshold_2) +
-                     "$)}\n" + "\\end{table}\n")
-    table.writelines("\\end{document}\n")
-    table.close()
-    run("pdflatex -output-directory {0} {1}.tex".format(os.path.dirname(output_name), output_name), shell=True)
+    table.writelines("\\end{adjustbox}\n" + "\\caption{" + output_name + ". ")
+    if disp_pval:
+        table.writelines("Asterisks indicate strength of support ($^{*} pp > " + "{0}".format(1 - threshold_1) +
+                         "$, $^{**} pp > " + "{0}$)".format(1 - threshold_2))
+    table.writelines("}\n\\end{table}\n")
 
 
 def plot_covariance_matrix(input_trace, output_plot, burn_in):
@@ -135,10 +91,28 @@ def plot_covariance_matrix(input_trace, output_plot, burn_in):
         df = pd.read_csv('{0}/life_history_traits.tsv'.format(os.path.dirname(input_trace)), sep='\t')
         lht_header = list(df.columns.values)[1:]
 
-    assert (len(lht_header) + 2 == dim)
-    precision_matrix = np.zeros((dim, dim), dtype=np.float64)
-    precision_matrix_list = [np.zeros((dim, dim), dtype=np.float64) for _ in range(len(trace.index[burn_in:]))]
+    if len(lht_header) + 2 == dim:
+        if "nodeomega" in input_trace:
+            names = ["LogOmega", "LogMutationRate"]
+        else:
+            names = ["LogNe", "LogMutationRate"]
+        names += lht_header
+    elif dim == 3:
+        names = ["LogNe", "LogMutationRate", "LogGenerationTime"]
+    elif dim == 6:
+        names = ["maturity", "mass", "longevity", "piS", "piNpiS", "generation_time"]
+    elif dim == 4:
+        names = ["maturity", "mass", "longevity", "generation_time"]
+    else:
+        exit(1)
 
+    table = open(output_plot + ".tex", 'w')
+    table.writelines("\\documentclass[USLetter,5pt]{article}\n"
+                     "\\usepackage{adjustbox}\n")
+    table.writelines("\\newcommand{\\specialcell}[2][c]{%\n\\begin{tabular}[#1]{@{}c@{}}#2\\end{tabular}}\n")
+    table.writelines("\\begin{document}\n")
+
+    precision_matrix_list = [np.zeros((dim, dim), dtype=np.float64) for _ in range(len(trace.index[burn_in:]))]
     for i in range(dim):
         for j in range(dim):
             if i >= j:
@@ -148,38 +122,27 @@ def plot_covariance_matrix(input_trace, output_plot, burn_in):
 
                 for point, val in enumerate(trace[name][burn_in:]):
                     precision_matrix_list[point][i][j] = val
-                    if i != j:
-                        precision_matrix_list[point][j][i] = val
+                    precision_matrix_list[point][j][i] = val
 
-                precision_matrix[i][j] = np.mean(trace[name][burn_in:])
-                if i != j:
-                    precision_matrix[j][i] = precision_matrix[i][j]
-
-    cov_matrix = np.linalg.inv(precision_matrix)
+    print(names)
+    print(dim)
     cov_matrix_list = [np.linalg.inv(p) for p in precision_matrix_list]
+    save_latex(table, cov_matrix_list, names, "Covariance ($\\Sigma$)", True)
 
-    corr_matrix = corr_from_cov_matrix(cov_matrix)
     corr_matrix_list = [corr_from_cov_matrix(c) for c in cov_matrix_list]
+    save_latex(table, corr_matrix_list, names, "Correlation ($\\rho$)")
 
-    if "nodeomega" in input_trace:
-        names = ["LogOmega", "LogMutationRate"]
-    else:
-        names = ["LogNe", "LogMutationRate"]
-    names += lht_header
+    r2_matrix_list = [np.multiply(c, c) for c in corr_matrix_list]
+    save_latex(table, r2_matrix_list, names, "R-squared ($r^2$)", False, False)
 
-    save_latex(corr_matrix, corr_matrix_list, names, output_plot + "_correlation")
+    save_latex(table, precision_matrix_list, names, "Precision ($\\Omega$)", True)
 
-    save_heatmap(cov_matrix, cov_matrix_list, names, output_plot + "_covariance")
-    save_heatmap(corr_matrix, corr_matrix_list, names, output_plot + "_correlation")
-    save_heatmap(precision_matrix, precision_matrix_list, names, output_plot + "_precision")
-    for in_dim in range(2, dim + 1):
-        sub_par_matrix = partial_cov_from_precision_matrix(np.linalg.inv(cov_matrix[:in_dim, :in_dim]))
-        sub_par_matrix_list = [partial_cov_from_precision_matrix(np.linalg.inv(c[:in_dim, :in_dim])) for c in
-                               cov_matrix_list]
-        save_heatmap(sub_par_matrix, sub_par_matrix_list, names[:in_dim],
-                     output_plot + "_partial_correlation_{0}".format(in_dim))
-        save_latex(sub_par_matrix, sub_par_matrix_list, names[:in_dim],
-                   output_plot + "_partial_correlation_{0}".format(in_dim))
+    sub_par_matrix_list = [partial_cov_from_precision_matrix(np.linalg.inv(c)) for c in cov_matrix_list]
+    save_latex(table, sub_par_matrix_list, names, "Partial coefficient")
+
+    table.writelines("\\end{document}\n")
+    table.close()
+    run("pdflatex -output-directory {0} {1}.tex".format(os.path.dirname(output_plot), output_plot), shell=True)
 
 
 if __name__ == '__main__':
