@@ -1,0 +1,59 @@
+EXPERIMENT:
+  COMPILE: false
+SIMULATION:
+  TREE: SimuEvol/data/trees/primates.short.nwk
+  PREFERENCES: SimuEvol/data/preferences/np_1.prefs
+  NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
+  PRECISION_MATRIX: 0
+  MUTATION_RATE_PER_GENERATION: 0.1
+  ROOT_AGE: 10
+  GENERATION_TIME: 5
+  EXON_SIZE: 1
+  SEED: 0
+  BRANCH_WISE_CORRELATION: true
+  FIXED_POP_SIZES: false
+  FIXED_MUT_RATE: false
+  FIXED_GENERATION_TIME: false
+SimuFold:
+  PDB_FOLDER: SimuEvol/data/pdbfiles
+  NBR_EXONS: 16
+  NBR_GRID_STEP: 100
+  POP_SIZE: 1e5
+  CUT_OFF: 7.0
+SimuDiv:
+  BETA: 1.0
+  NBR_GRID_STEP: 100
+SimuPoly:
+  BETA: 1.0
+  POP_SIZE: 5000
+  SAMPLE_SIZE: 20
+  NOISE_SIGMA: 0.2
+  NOISE_THETA: 0.5
+SimuGeo:
+  NBR_GRID_STEP: 100
+  POP_SIZE: 200.0
+  COMPLEXITY: 3
+  NBR_EXONS: 16
+INFERENCE_REPLICATE:
+  CHAINS: [1]
+  POLYMORPHISM: [false]
+  MODELS: [nodetraits]
+  SIMULATORS: [SimuDiv]
+INFERENCE:
+  RESTART: false
+  POINTS: 200
+  PRECISION: 10
+  NCAT: 50
+INFERENCE_NODE:
+  TRAITS: true
+  FOSSILS: 999
+  NBR_TRAITS: 20
+  DOF: 1
+  MOVE_ROOT_POP_SIZE: false
+  CLAMP_PREFERENCES: false
+  CLAMP_POP_SIZES: false
+  CLAMP_NUC_MATRIX: false
+  CLAMP_CORR_MATRIX: false
+  ARITHMETIC: true
+PLOT:
+  BURN_IN: 50
