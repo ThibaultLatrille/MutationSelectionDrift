@@ -4,7 +4,7 @@ import os
 import subprocess
 from csv import reader
 import pandas as pd
-from plot_module import plot_correlation, plot_2dhist
+from plot_module import plot_correlation
 
 nperline = 100
 header = "site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y\n"
@@ -18,7 +18,7 @@ def plot_profiles(args_input, args_infer, args_output):
         name = os.path.basename(args_input).replace(".prefs", "").replace("_", "-")
         subprocess.call(cmd_plot.format(args_input, args_output, name, nperline), shell=True)
         input_df = pd.read_csv(args_input, sep=",")
-        axis_dict[name] = input_df.drop('site', axis=1).values.flatten()
+        axis_dict["Simulation"] = input_df.drop('site', axis=1).values.flatten()
 
     for profile in args_infer:
         prefs = args_output + "/" + os.path.basename(profile).replace(".siteprofiles", ".prefs")
@@ -40,8 +40,7 @@ def plot_profiles(args_input, args_infer, args_output):
             diff_df.to_csv(prefs + ".diff", sep=',', encoding='utf-8', index=False)
             subprocess.call(cmd_diff_plot.format(prefs + ".diff", args_output, name + ".diff", nperline), shell=True)
 
-    plot_correlation(os.path.join(args_output, 'correlation.png'), axis_dict, {}, [], global_xy=True, alpha=0.0025)
-    # plot_2dhist(os.path.join(args_output, 'correlation.2dhist.pdf'), axis_dict, global_xy=True)
+    plot_correlation(os.path.join(args_output, 'correlation.aa-preferences.png'), axis_dict, {}, global_min_max=True, alpha=0.0025)
 
 
 if __name__ == '__main__':

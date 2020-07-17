@@ -12,7 +12,7 @@ def remove_units(str):
     return str.replace("(g)", "").replace("(days)", "").replace("(yrs)", "").replace("(kg)", "").replace("(cm)", "")
 
 
-def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, simu_tree):
+def plot_trees_from_traces(input_trace, output_plot, simu_dict, simu_tree):
     axis_trees, axis_filenames = dict(), dict()
 
     for filepath in input_trace:
@@ -54,15 +54,11 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, color_map_dict, 
 
         if len(axis_dict) > 1:
             path = '{0}/correlation.{1}.pdf'.format(output_plot, feature)
-
-            if feature in color_map_dict:
-                plot_correlation(path, axis_dict, err_dict, color_map_dict[feature], global_xy=False)
-            else:
-                plot_correlation(path, axis_dict, err_dict, [], global_xy=False)
+            plot_correlation(path, axis_dict, err_dict, global_min_max=False)
 
 
 def open_simulation(input_simu):
-    simu_dict, color_map_dict = dict(), dict()
+    simu_dict = dict()
 
     simu_params = {k: v[0] for k, v in pd.read_csv(input_simu + '.parameters.tsv', sep='\t').items()}
     t = Tree(input_simu + ".nhx", format=1)
@@ -85,8 +81,6 @@ def open_simulation(input_simu):
         simu_dict["Log10Theta"] = [np.log10(4 * float(n.mutation_rate_per_generation) * float(n.population_size)) for n
                                    in
                                    t.traverse() if n.is_leaf()]
-        color_map_dict["Log10Theta"] = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse() if
-                                        n.is_leaf()]
     else:
         simu_dict["LogMutationRatePerTime"] = [np.log(float(n.mutation_rate) * root_age) for n in t.traverse()]
 
@@ -95,18 +89,7 @@ def open_simulation(input_simu):
         np.log10(n.get_distance(n.up) * float(n.Branch_mutation_rate_per_generation) / float(n.Branch_generation_time))
         for n in t.traverse() if not n.is_root()]
 
-    color_map_branch = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse() if not n.is_root()]
-    color_map_dict["BranchTime"] = color_map_branch
-    color_map_dict["Log10BranchLength"] = color_map_branch
-    color_map_dict["ContrastPopulationSize"] = color_map_branch
-
-    color_map_nodes = [np.log(float(n.population_size) / root_pop_size) for n in t.traverse()]
-    color_map_dict["LogMutationRatePerGeneration"] = color_map_nodes
-    color_map_dict["LogGenerationTime"] = color_map_nodes
-    color_map_dict["LogMutationRatePerTime"] = color_map_nodes
-    color_map_dict["LogPopulationSize"] = color_map_nodes
-    color_map_dict["LogOmega"] = color_map_nodes
-    return simu_dict, color_map_dict, t
+    return simu_dict, t
 
 
 def open_tsv_population_size(tree_file, tsv_file):
@@ -137,10 +120,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     if args.simulation != "":
-        simu, color_map, simu_tree = open_simulation(args.simulation)
-        plot_trees_from_traces(args.trace, args.output, simu, {}, simu_tree)
+        simu, simu_tree = open_simulation(args.simulation)
+        plot_trees_from_traces(args.trace, args.output, simu, simu_tree)
     elif args.tree != "" and args.tsv != "":
         pop_size, input_tree = open_tsv_population_size(args.tree, args.tsv)
-        plot_trees_from_traces(args.trace, args.output, pop_size, {}, input_tree)
+        plot_trees_from_traces(args.trace, args.output, pop_size, input_tree)
     else:
-        plot_trees_from_traces(args.trace, args.output, {}, {}, False)
+        plot_trees_from_traces(args.trace, args.output, {}, False)

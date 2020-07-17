@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from subprocess import run
 
-folder = "DataSimulated"
+folder = "DataEmpirical"
 os.chdir("../" + folder)
 os.makedirs("Traces/", exist_ok=True)
 param = "aaent"

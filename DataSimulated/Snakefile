@@ -103,14 +103,9 @@ print(INFERENCE_MODELS)
 
 rule all:
     input:
-        expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
-        EXPERIMENT + '/all_correlation_matrix',
-
-rule all_old:
-    input:
          EXPERIMENT + '/all_profiles',
          expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
-          expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
+         expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
          EXPERIMENT + '/all_correlation_matrix',
          EXPERIMENT + '/all_trees'
 

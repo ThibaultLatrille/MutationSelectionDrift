@@ -25,7 +25,7 @@ def plot_simulation(input_simu, args_output):
             if len(values) > 1 and ("Branch" in arg) and (("dNd" in arg) or ("LogNe" in arg)):
                 branch_dict[arg] = values
 
-    plot_correlation("{0}/correlation.Ne.dNdS.pdf".format(args_output), branch_dict, {}, {}, global_xy=False)
+    plot_correlation("{0}/correlation.Ne.dNdS.pdf".format(args_output), branch_dict, {}, global_min_max=False)
 
 
 if __name__ == '__main__':

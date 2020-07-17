@@ -28,32 +28,33 @@ def tex_f(f):
 
 def format_header(s):
     if s == "LogNe":
-        return "$N_{\\mathrm{e}}$"
+        return "$\\bm{N_{\\mathrm{e}}}$"
     elif s == "LogOmega":
-        return "$\\omega$"
+        return "$\\bm{\\omega}$"
     elif s == "LogMutationRate":
-        return "$\\mu$"
+        return "$\\bm{\\mu}$"
     elif s == "piS":
-        return "$\\pi_{S}$"
+        return "$\\bm{\\pi_{S}}$"
     elif s == "piNpiS":
-        return "$\\pi_{N}/\\pi_{S}$"
+        return "$\\bm{\\pi_{N}/\\pi_{S}}$"
     else:
-        return "\\\\".join(s.split("_"))
+        if ('(' in s) and ("$" not in s): s = s.split('(')[0]
+        return "\\textbf{" + s.replace('_', " ") + "}"
 
 
-def save_latex(table, matrix_list, names, output_name, plot_diag=False, disp_pval=True):
-    heading = ["\\specialcell{" + format_header(n) + "}" for n in [output_name] + names]
-    table.writelines("\\begin{table}[ht]\n\\centering\n\\begin{adjustbox}{width = 1\\textwidth}\n")
-    table.writelines("\\begin{tabular}{|c|" + "c" * len(names) + "|}\n")
-    table.writelines("\\hline\n")
-    table.writelines(" & ".join(heading) + "\\\\\n")
-    table.writelines("\\hline\n")
+def save_latex(output_prefix, matrix_list, names, output_name, plot_diag=False, disp_pval=True):
+    tabu = "\\centering\n\\noindent\\adjustbox{max width=\\textwidth}{%\n"
+    heading = [format_header(n) for n in [output_name] + names]
+    tabu += "\\begin{tabu}{|c||" + "c|" * len(names) + "}\n"
+    tabu += "\\hline\n"
+    tabu += " & ".join(heading) + "\\\\\n"
+    tabu += "\\hhline{|=#" + "=|" * len(names) + "}\n"
     threshold_1 = 0.05
     threshold_2 = 0.025
     assert (threshold_2 < threshold_1)
 
     for i in range(matrix_list[0].shape[0]):
-        elts = ["\\specialcell{" + format_header(names[i]) + "}"]
+        elts = [format_header(names[i])]
         for j in range(matrix_list[0].shape[1]):
             if i < j or (i == j and plot_diag):
                 x = np.mean([m[i][j] for m in matrix_list])
@@ -66,15 +67,20 @@ def save_latex(table, matrix_list, names, output_name, plot_diag=False, disp_pva
                     elt += "}"
                 elts.append(elt + "$")
             else:
-                elts.append("$\\dots$")
-        table.writelines(" & ".join(elts) + "\\\\\n")
-    table.writelines("\\hline\n")
-    table.writelines("\\end{tabular}\n")
-    table.writelines("\\end{adjustbox}\n" + "\\caption{" + output_name + ". ")
+                elts.append("-")
+        tabu += " & ".join(elts) + "\\\\\\hline\n"
+    tabu += "\\end{tabu}}\n"
+    if '(' in output_name: output_name = output_name.split('(')[0]
+    f = open(output_prefix + "_" + output_name.strip().lower().replace(" ", "_") + ".tex", 'w')
+    f.writelines(tabu)
+    f.close()
+    table = "\\begin{table}[ht]\n" + tabu
+    table += "\\caption{" + output_name + ". "
     if disp_pval:
-        table.writelines("Asterisks indicate strength of support ($^{*} pp > " + "{0}".format(1 - threshold_1) +
-                         "$, $^{**} pp > " + "{0}$)".format(1 - threshold_2))
-    table.writelines("}\n\\end{table}\n")
+        table += "Asterisks indicate strength of support ($^{*} pp > " + "{0}".format(
+            1 - threshold_1) + "$, $^{**} pp > " + "{0}$)".format(1 - threshold_2)
+    table += "}\n\\end{table}\n"
+    return table
 
 
 def plot_covariance_matrix(input_trace, output_plot, burn_in):
@@ -108,8 +114,10 @@ def plot_covariance_matrix(input_trace, output_plot, burn_in):
 
     table = open(output_plot + ".tex", 'w')
     table.writelines("\\documentclass[USLetter,5pt]{article}\n"
+                     "\\usepackage{tabu}\n"
+                     "\\usepackage{bm}\n"
+                     "\\usepackage{hhline}\n"
                      "\\usepackage{adjustbox}\n")
-    table.writelines("\\newcommand{\\specialcell}[2][c]{%\n\\begin{tabular}[#1]{@{}c@{}}#2\\end{tabular}}\n")
     table.writelines("\\begin{document}\n")
 
     precision_matrix_list = [np.zeros((dim, dim), dtype=np.float64) for _ in range(len(trace.index[burn_in:]))]
@@ -127,18 +135,18 @@ def plot_covariance_matrix(input_trace, output_plot, burn_in):
     print(names)
     print(dim)
     cov_matrix_list = [np.linalg.inv(p) for p in precision_matrix_list]
-    save_latex(table, cov_matrix_list, names, "Covariance ($\\Sigma$)", True)
+    table.write(save_latex(output_plot, cov_matrix_list, names, "Covariance ($\\bm{\\Sigma}$)", True))
 
     corr_matrix_list = [corr_from_cov_matrix(c) for c in cov_matrix_list]
-    save_latex(table, corr_matrix_list, names, "Correlation ($\\rho$)")
+    table.write(save_latex(output_plot, corr_matrix_list, names, "Correlation ($\\bm{\\rho}$)"))
 
     r2_matrix_list = [np.multiply(c, c) for c in corr_matrix_list]
-    save_latex(table, r2_matrix_list, names, "R-squared ($r^2$)", False, False)
+    table.write(save_latex(output_plot, r2_matrix_list, names, "R-squared ($\\bm{r^2}$)", False, False))
 
-    save_latex(table, precision_matrix_list, names, "Precision ($\\Omega$)", True)
+    table.write(save_latex(output_plot, precision_matrix_list, names, "Precision ($\\bm{\\Omega}$)", True))
 
     sub_par_matrix_list = [partial_cov_from_precision_matrix(np.linalg.inv(c)) for c in cov_matrix_list]
-    save_latex(table, sub_par_matrix_list, names, "Partial coefficient")
+    table.write(save_latex(output_plot, sub_par_matrix_list, names, "Partial coefficient"))
 
     table.writelines("\\end{document}\n")
     table.close()

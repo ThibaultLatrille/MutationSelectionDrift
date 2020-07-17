@@ -2,19 +2,18 @@
 from itertools import chain
 import numpy as np
 import statsmodels.api as sm
-import seaborn as sns
-from scipy.stats import kde
 import matplotlib
 from matplotlib.collections import LineCollection
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
+import matplotlib.colors as colors
 
-matplotlib.rcParams["font.family"] = ["Latin Modern Mono"]
+matplotlib.rcParams["font.family"] = ["Latin Modern Sans"]
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.font_manager as font_manager
 
-my_dpi = 128
+mono_font = font_manager.FontProperties(family='Latin Modern Mono', style='normal')
 RED = "#EB6231"
 YELLOW = "#E29D26"
 BLUE = "#5D80B4"
@@ -52,17 +51,24 @@ def to_float(f):
 
 
 def format_float(x):
-    if 10 > x >= 0:
-        return "{0:.2f}".format(x)
+    if 0.001 < x < 10:
+        return "{:6.3f}".format(x)
+    elif x < 10000:
+        return "{:6.1f}".format(x)
     else:
-        return "{0:.1f}".format(x)
+        s = "{:6.2g}".format(x)
+        if "e" in s:
+            mantissa, exp = s.split('e')
+            s = mantissa + 'e$^{' + str(int(exp)) + '}$'
+            s = " " * (5 + 6 - len(s)) + s
+        return s
 
 
 def tex_float(x):
     s = "{0:.3g}".format(x)
     if "e" in s:
         mantissa, exp = s.split('e')
-        return mantissa + '\\times 10^{' + exp + '}'
+        return mantissa + 'e^{' + exp + '}'
     else:
         return s
 
@@ -83,110 +89,87 @@ def min_max(axis, err):
         return min_axis, max_axis
 
 
-def plot_2dhist(name, axis_dict, global_xy=False, alpha=1):
-    f, axs = plt.subplots(len(axis_dict), len(axis_dict),
-                          figsize=(len(axis_dict) * 640 / my_dpi, len(axis_dict) * 480 / my_dpi), dpi=my_dpi)
-
-    if len(axis_dict) == 1:
-        axs = [[axs]]
-
-    if "Log" in name.split("/")[-1]:
-        for axis in axis_dict:
-            axis_dict[axis] = np.exp(axis_dict[axis])
-
-    min_max_axis = {n: min_max(a, 0.0) for n, a in axis_dict.items()}
-    if global_xy:
-        global_min = min([min(i) for i in min_max_axis.values()])
-        global_max = max([max(i) for i in min_max_axis.values()])
-        for n in min_max_axis:
-            min_max_axis[n] = (global_min, global_max)
-
-    for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
-        for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
-            ax = axs[row][col]
-            # ax.set_xlim(min_max_axis[col_filename])
-            nb_bins = 50 if len(col_axis) > 100 else int(len(col_axis) / 2)
-
-            if row == col:
-                ax.hist(col_axis, nb_bins, density=True, color=BLUE)
-            else:
-                # ax.set_ylim(min_max_axis[row_filename])
-                sns.kdeplot(col_axis, row_axis, n_levels=20, shade=True, ax=ax)
-                # x_min, x_max = min_max_axis[row_filename]
-                # k = kde.gaussian_kde([col_axis, row_axis])
-                # xi, yi = np.mgrid[x_min:x_max:nb_bins * 1j, x_min:x_max:nb_bins * 1j]
-                # zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-                # zi = np.power(zi, .25)
-                # ax.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='gouraud', cmap=plt.cm.BuPu)
-                # ax.contour(xi, yi, zi.reshape(xi.shape))
-
-                if "Log" in name.split("/")[-1]:
-                    idf = np.logspace(np.log10(min(min_max_axis[col_filename])),
-                                      np.log10(max(min_max_axis[col_filename])), 30)
-                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                        model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
-                        results = model.fit()
-                        b, a = results.params[0:2]
-                        ax.plot(idf, np.exp(a * np.log(idf) + b), '-', color=RED,
-                                label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                                    tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                                    "+" if float(b) > 0 else "-"))
-                        if a > 0:
-                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                        ax.legend()
-                else:
-                    idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
-                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                        model = sm.OLS(row_axis, sm.add_constant(col_axis))
-                        results = model.fit()
-                        b, a = results.params[0:2]
-                        ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                            tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                            "+" if float(b) > 0 else "-"))
-                        if a > 0:
-                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                        ax.legend()
-
-            if "Log" in name.split("/")[-1]:
-                ax.set_xscale("log")
-                ax.set_yscale("log")
-            if row == len(axis_dict) - 1:
-                ax.set_xlabel(col_filename)
-            if col == 0:
-                ax.set_ylabel(row_filename)
-
-    plt.tight_layout()
-    plt.savefig(name, format=name[name.rfind('.') + 1:])
-    plt.clf()
-    plt.close('all')
+def label_transform(s):
+    if s == "LogPopulationSize" or s == "LogNe":
+        return 'Effective population size ($N_{\\mathrm{e}} $)'
+    elif s == "LogMutationRate" or s == "LogMutationRatePerTime":
+        return 'Mutation rate per unit of time ($\\mu$)'
+    elif s == "LogOmega":
+        return 'Non-synonymous relative substitution rate ($\\omega$)'
+    elif s == "TraitsAdult_weight_":
+        return 'Adult weight (g)'
+    elif s == "TraitsFemale_maturity_":
+        return 'Female maturity (days)'
+    elif s == "TraitsMaximum_longevity_":
+        return 'Maximum longevity (years)'
+    elif s == "Traitsgeneration_time":
+        return 'Generation time (days)'
+    elif s == "Traitslongevity":
+        return 'Longevity (years)'
+    elif s == "Traitsmass":
+        return 'Mass (kg)'
+    elif s == "Traitsmaturity":
+        return 'Maturity (days)'
+    elif s == "TraitspiNpiS":
+        return '$\\pi_{N} / \\pi_{S}$'
+    elif s == "TraitspiS":
+        return '$\\pi_{S}$'
+    elif s == "aa-preferences":
+        return 'Amino-acid preferences'
+    elif s == "ContrastPopulationSize":
+        return 'Contrast Population Size'
+    elif s == "Log10BranchLength":
+        return 'Branch length'
+    elif s == "BranchTime":
+        return 'Branch time'
+    else:
+        return s
 
 
-def plot_correlation(name, axis_dict, err_dict, color_map, global_xy=False, alpha=1.0):
-    f, axs = plt.subplots(len(axis_dict), len(axis_dict),
-                          figsize=(len(axis_dict) * 640 / my_dpi, len(axis_dict) * 480 / my_dpi), dpi=my_dpi)
+def label_id(s):
+    if "Id" in s:
+        return "{0}".format(int(s.replace("Id", "")) + 1)
+    if "run" in s:
+        return s.split("_")[-2]
+    else:
+        return s.split("-")[-2]
 
-    if len(axis_dict) == 1:
-        axs = [[axs]]
 
+def label_corr_transform(s):
+    if "read" in s or "run" in s:
+        s = "Chain " + label_id(s)
+    elif "Id" in s:
+        s = "Replicate " + label_id(s)
+    return s
+
+
+def expo(x, base10=False):
+    if base10:
+        return np.power(10, x)
+    else:
+        return np.exp(x)
+
+
+def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0):
+    if len(axis_dict) == 1: return
+
+    is_log = "Log" in name.split(".")[-2] or "Traits" in name.split(".")[-2]
+    base10 = "Log10" in name.split(".")[-2]
     scatter_kwargs = {"zorder": 0}
     error_kwargs = {"lw": .5, "zorder": -1}
-    cm = plt.cm.get_cmap('inferno')
-    if len(color_map) > 0:
-        min_annot, max_annot = min(color_map), max(color_map)
-        norm = Normalize(vmin=min_annot, vmax=max_annot)
 
-    if "Log" in name.split("/")[-1]:
+    if is_log:
         for axis in axis_dict:
-            axis_dict[axis] = np.exp(axis_dict[axis])
+            axis_dict[axis] = expo(axis_dict[axis], base10)
             if axis in err_dict:
                 if err_dict[axis].ndim == 1:
-                    err_dict[axis] = axis_dict[axis] * (np.exp(err_dict[axis]) - 1)
+                    err_dict[axis] = axis_dict[axis] * (expo(err_dict[axis], base10) - 1)
                 else:
-                    err_dict[axis][0] = axis_dict[axis] * (1 - np.exp(-err_dict[axis][0]))
-                    err_dict[axis][1] = axis_dict[axis] * (np.exp(err_dict[axis][1]) - 1)
+                    err_dict[axis][0] = axis_dict[axis] * (1 - expo(-err_dict[axis][0], base10))
+                    err_dict[axis][1] = axis_dict[axis] * (expo(err_dict[axis][1], base10) - 1)
 
     min_max_axis = {n: min_max(a, err_dict[n] if (n in err_dict) else 0.0) for n, a in axis_dict.items()}
-    if global_xy:
+    if global_min_max:
         global_min = min([min(i) for i in min_max_axis.values()])
         global_max = max([max(i) for i in min_max_axis.values()])
         for n in min_max_axis:
@@ -194,76 +177,69 @@ def plot_correlation(name, axis_dict, err_dict, color_map, global_xy=False, alph
 
     for row, (row_filename, row_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
         for col, (col_filename, col_axis) in enumerate(sorted(axis_dict.items(), key=lambda x: x[0])):
-            ax = axs[row][col]
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            if row_filename == "Simulation": continue
+            if col_filename != "Simulation" and col_filename >= row_filename: continue
             ax.set_xlim(min_max_axis[col_filename])
+            ax.set_ylim(min_max_axis[row_filename])
 
-            if row == col:
-                nb_bins = 50 if len(col_axis) > 100 else int(len(col_axis) / 2)
-                ax.hist(col_axis, nb_bins, density=True, color=BLUE)
+            ax.scatter(col_axis, row_axis, color=BLUE, **scatter_kwargs,
+                       label=r"${0}$ points".format(len(row_axis)), alpha=alpha)
+
+            if (col_filename in err_dict) and (row_filename in err_dict):
+                ax.errorbar(col_axis, row_axis, xerr=err_dict[col_filename], yerr=err_dict[row_filename], fmt='o',
+                            marker=None, mew=0, ecolor=GREEN, **error_kwargs)
+            elif col_filename in err_dict:
+                ax.errorbar(col_axis, row_axis, xerr=err_dict[col_filename], fmt='o', marker=None, mew=0,
+                            ecolor=GREEN, **error_kwargs)
+            elif row_filename in err_dict:
+                ax.errorbar(col_axis, row_axis, yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
+                            ecolor=GREEN, **error_kwargs)
+            if is_log:
+                idf = np.logspace(np.log10(min(min_max_axis[col_filename])),
+                                  np.log10(max(min_max_axis[col_filename])), 30)
+                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                    model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
+                    results = model.fit()
+                    b, a = results.params[0:2]
+                    ax.plot(idf, np.exp(a * np.log(idf) + b), '-', color=RED,
+                            label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
+                                tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
+                                "+" if float(b) > 0 else "-"))
+                    if a > 0:
+                        ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
+                    ax.legend()
             else:
-                ax.set_ylim(min_max_axis[row_filename])
+                idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
+                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                    model = sm.OLS(row_axis, sm.add_constant(col_axis))
+                    results = model.fit()
+                    b, a = results.params[0:2]
+                    ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
+                        tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
+                        "+" if float(b) > 0 else "-"))
+                    if a > 0:
+                        ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
+                    ax.legend()
 
-                if len(color_map) > 0 and len(color_map) == len(col_axis) and len(color_map) == len(row_axis):
-                    ax.scatter(col_axis, row_axis, c=color_map, cmap=cm, norm=norm, **scatter_kwargs,
-                               label=r"${0}$ points".format(len(row_axis)), alpha=alpha)
-                else:
-                    ax.scatter(col_axis, row_axis, color=BLUE, **scatter_kwargs,
-                               label=r"${0}$ points".format(len(row_axis)), alpha=alpha)
-
-                if (col_filename in err_dict) and (row_filename in err_dict):
-                    ax.errorbar(col_axis, row_axis, xerr=err_dict[col_filename], yerr=err_dict[row_filename], fmt='o',
-                                marker=None, mew=0, ecolor=GREEN, **error_kwargs)
-                elif col_filename in err_dict:
-                    ax.errorbar(col_axis, row_axis, xerr=err_dict[col_filename], fmt='o', marker=None, mew=0,
-                                ecolor=GREEN, **error_kwargs)
-                elif row_filename in err_dict:
-                    ax.errorbar(col_axis, row_axis, yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
-                                ecolor=GREEN, **error_kwargs)
-                if "Log" in name.split("/")[-1]:
-                    idf = np.logspace(np.log10(min(min_max_axis[col_filename])),
-                                      np.log10(max(min_max_axis[col_filename])), 30)
-                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                        model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
-                        results = model.fit()
-                        b, a = results.params[0:2]
-                        ax.plot(idf, np.exp(a * np.log(idf) + b), '-', color=RED,
-                                label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                                    tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                                    "+" if float(b) > 0 else "-"))
-                        if a > 0:
-                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                        ax.legend()
-                else:
-                    idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
-                    if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
-                        model = sm.OLS(row_axis, sm.add_constant(col_axis))
-                        results = model.fit()
-                        b, a = results.params[0:2]
-                        ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                            tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                            "+" if float(b) > 0 else "-"))
-                        if a > 0:
-                            ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                        ax.legend()
-
-            if "Log" in name.split("/")[-1]:
+            label = label_transform(name.split(".")[-2])
+            ax.set_ylabel(label + " - " + label_corr_transform(row_filename))
+            ax.set_xlabel(label + " - " + label_corr_transform(col_filename))
+            if is_log:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
-            if row == len(axis_dict) - 1:
-                ax.set_xlabel(col_filename)
-            if col == 0:
-                ax.set_ylabel(row_filename)
+            dot = name.rfind('.')
+            plt.tight_layout()
+            plt.savefig("{}-{}-{}.{}".format(name[:dot],
+                                             col_filename if col_filename == "Simulation" else label_id(col_filename),
+                                             label_id(row_filename), name[dot + 1:]), format=name[dot + 1:])
+            plt.clf()
+            plt.close('all')
 
-    if len(color_map) > 0:
-        f.subplots_adjust(right=0.9)
-        cbar_ax = f.add_axes([0.92, 0.05, 0.05, 0.90])
-        cmappable = ScalarMappable(norm=norm, cmap=cm)
-        cmappable.set_array(color_map)
-        f.colorbar(cmappable, cax=cbar_ax)
-    plt.tight_layout()
-    plt.savefig(name, format=name[name.rfind('.') + 1:])
-    plt.clf()
-    plt.close('all')
+
+def get_annot(n, f):
+    return np.exp(float(getattr(n, f)))
 
 
 def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_width=0.5, hz_line_width=0.2,
@@ -281,20 +257,21 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
         fig = plt.figure(figsize=(16, 16))
     ax = fig.add_subplot(111)
 
-    min_annot_list = [float(getattr(n, feature + "_min")) for n in tree.iter_leaves() if feature + "_min" in n.features]
+    min_annot_list = [get_annot(n, feature + "_min") for n in tree.iter_leaves() if feature + "_min" in n.features]
     if len(min_annot_list) > 0:
         min_annot = min(min_annot_list)
     else:
-        min_annot = min(float(getattr(n, feature)) for n in tree.iter_leaves() if feature in n.features)
+        min_annot = min(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
 
-    max_annot_list = [float(getattr(n, feature + "_max")) for n in tree.iter_leaves() if feature + "_max" in n.features]
+    max_annot_list = [get_annot(n, feature + "_max") for n in tree.iter_leaves() if feature + "_max" in n.features]
     if len(max_annot_list) > 0:
         max_annot = max(max_annot_list)
     else:
-        max_annot = max(float(getattr(n, feature)) for n in tree.iter_leaves() if feature in n.features)
+        max_annot = max(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
 
     cmap = plt.get_cmap("inferno")
-    color_map = ScalarMappable(norm=Normalize(vmin=min_annot, vmax=max_annot), cmap=cmap)
+    norm = colors.LogNorm(vmin=min_annot, vmax=max_annot)
+    color_map = ScalarMappable(norm=norm, cmap=cmap)
 
     node_pos = dict((n2, i) for i, n2 in enumerate(tree.get_leaves()[::-1]))
 
@@ -306,8 +283,8 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
 
         min_node_annot, max_node_annot = False, False
         if (feature + "_min" in n.features) and (feature + "_max" in n.features):
-            min_node_annot = float(getattr(n, feature + "_min"))
-            max_node_annot = float(getattr(n, feature + "_max"))
+            min_node_annot = get_annot(n, feature + "_min")
+            max_node_annot = get_annot(n, feature + "_max")
             nodes.append({"min": min_node_annot, "max": max_node_annot})
 
         if n.is_leaf():
@@ -318,33 +295,32 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
             if len(n.name) != max_name_size:
                 node_name += " " * (max_name_size - len(n.name))
             if feature in n.features:
-                node_name += " " + format_float(float(getattr(n, feature)))
-                row[feature] = float(getattr(n, feature))
+                node_name += " " + format_float(get_annot(n, feature))
+                row[feature] = get_annot(n, feature)
             if min_node_annot and max_node_annot:
                 node_name += " [{0},{1}]".format(format_float(min_node_annot), format_float(max_node_annot))
                 row[feature + "Lower"] = min_node_annot
                 row[feature + "Upper"] = max_node_annot
-            ax.text(x, y, node_name, va='center', size=font_size)
+            ax.text(x, y, node_name, va='center', size=font_size, name="Latin Modern Mono")
             rows.append(row)
         else:
             y = np.mean([node_pos[n2] for n2 in n.children])
             node_pos[n] = y
 
             if feature in n.features:
-                node_annot = float(getattr(n, feature))
+                node_annot = get_annot(n, feature)
                 # draw vertical line
                 vlinec.append(((x, node_pos[n.children[0]]), (x, node_pos[n.children[-1]])))
                 vlines.append(node_annot)
 
                 # draw horizontal lines
                 for child in n.children:
-                    child_annot = float(getattr(child, feature))
+                    child_annot = get_annot(child, feature)
                     h = node_pos[child]
                     xs = [[x, x], [x + child.dist, x + child.dist]]
                     ys = [[h - hz_line_width, h + hz_line_width], [h - hz_line_width, h + hz_line_width]]
                     zs = [[node_annot, node_annot], [child_annot, child_annot]]
-                    ax.pcolormesh(xs, ys, zs, cmap=cmap, norm=Normalize(vmin=min_annot, vmax=max_annot),
-                                  shading="gouraud")
+                    ax.pcolormesh(xs, ys, zs, cmap=cmap, norm=norm, shading="gouraud")
             else:
                 vblankline.append(((x, node_pos[n.children[0]]), (x, node_pos[n.children[-1]])))
                 for child in n.children:
@@ -389,8 +365,12 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
     ax.set_axis_off()
     # plt.tight_layout()
     color_map._A = []
-    cbar = fig.colorbar(color_map, orientation='horizontal', pad=0, shrink=0.6)
-    cbar.ax.set_xlabel(feature, labelpad=5, size=font_size * 1.2)
+    ticks = "PopulationSize" in feature
+    cbar = fig.colorbar(color_map, ticks=([0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50] if ticks else None),
+                        orientation='horizontal', pad=0, shrink=0.6)
+    cbar.ax.xaxis.set_tick_params(labelsize=font_size)
+    if ticks: cbar.ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    cbar.ax.set_xlabel(label_transform(feature), labelpad=5, size=font_size * 1.2)
     plt.tight_layout()
     for o in fig.findobj():
         o.set_clip_on(False)
