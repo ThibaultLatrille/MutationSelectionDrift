@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 cd ~/MutationSelectionDrift/
-rm -rf ./manuscript/artworks/primates/; rm -rf ./manuscript/artworks/mammals/; rm -rf ./manuscript/artworks/isopods/; rm -rf ./manuscript/artworks/simulations/
-mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkdir ./manuscript/artworks/isopods/; mkdir ./manuscript/artworks/simulations/
+rm -rf ./manuscript/artworks/primates/; rm -rf ./manuscript/artworks/mammals/; rm -rf ./manuscript/artworks/isopods/; rm -rf ./manuscript/artworks/drosophila/; rm -rf ./manuscript/artworks/simulations/
+mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkdir ./manuscript/artworks/isopods/; mkdir ./manuscript/artworks/drosophila/; mkdir ./manuscript/artworks/simulations/
 
 ### Simulations ###
 # Profiles correlation (png) #
@@ -56,11 +56,11 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_node_trees/correlation.ContrastPopulationSize-Simulation-1.pdf ./manuscript/artworks/simulations/SimuPoly_SiteMutSelBranchNe_BranchCorrelation_ContrastPopulationSize.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_node_trees/correlation.Log10BranchLength-Simulation-1.pdf ./manuscript/artworks/simulations/SimuPoly_SiteMutSelBranchNe_BranchCorrelation_Log10BranchLength.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_node_trees/correlation.LogMutationRatePerTime-Simulation-1.pdf ./manuscript/artworks/simulations/SimuPoly_SiteMutSelBranchNe_BranchCorrelation_LogMutationRatePerTime.pdf
-\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.BranchTime-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_BranchTime.pdf
-\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.LogPopulationSize-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_LogPopulationSize.pdf
-\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.ContrastPopulationSize-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_ContrastPopulationSize.pdf
-\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.Log10BranchLength-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_Log10BranchLength.pdf
-\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.LogMutationRatePerTime-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_LogMutationRatePerTime.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.BranchTime-Simulation-2.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_BranchTime.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.LogPopulationSize-Simulation-2.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_LogPopulationSize.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.ContrastPopulationSize-Simulation-2.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_ContrastPopulationSize.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.Log10BranchLength-Simulation-2.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_Log10BranchLength.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_node_trees/correlation.LogMutationRatePerTime-Simulation-2.pdf ./manuscript/artworks/simulations/SimuGeo_SiteMutSelBranchNe_BranchCorrelation_LogMutationRatePerTime.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuFold_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/SimuFold_BranchOmega_BranchCorrelation_LogOmega.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuDiv_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/SimuDiv_BranchOmega_BranchCorrelation_LogOmega.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/SimuPoly_BranchOmega_BranchCorrelation_LogOmega.pdf
@@ -188,3 +188,44 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/CorrelationMatrices/nodeomega_False_1_partial_coefficient.tex ./manuscript/artworks/primates/BranchOmega_TraitsPartialCorrelation.tex
 
 ### Drosophila ###
+# Experiment correlation (pdf) #
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-2.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-3.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogMutationRatePerTime-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime-1-2.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogMutationRatePerTime-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime-1-3.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.LogMutationRatePerTime-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.ContrastPopulationSize-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_ContrastPopulationSize-1-2.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.ContrastPopulationSize-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_ContrastPopulationSize-1-3.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.ContrastPopulationSize-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_ContrastPopulationSize-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.Log10BranchLength-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_Log10BranchLength-1-2.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.Log10BranchLength-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_Log10BranchLength-1-3.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.Log10BranchLength-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_Log10BranchLength-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-2.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-3.pdf
+\cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-4.pdf
+# Trees (pdf) #
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.TraitsLogGenomeSize.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_LogGenomeSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_nodeomega_trees/nodeomega_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/drosophila/18CDS_BranchOmega_R1_LogMutationRatePerTime.pdf
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_nodeomega_trees/nodeomega_False_1_run.LogOmega.pdf ./manuscript/artworks/drosophila/18CDS_BranchOmega_R1_LogdNdS.pdf
+# Traits correlation matrix (pdf & tex) #
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/node_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/node_False_1_covariance.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_TraitsCovariance.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/node_False_1_partial_coefficient.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_TraitsPartialCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id1/CorrelationMatrices/node_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R2_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id2/CorrelationMatrices/node_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R3_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id3/CorrelationMatrices/node_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R4_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/nodeomega_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R1_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/nodeomega_False_1_covariance.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R1_TraitsCovariance.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/CorrelationMatrices/nodeomega_False_1_partial_coefficient.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R1_TraitsPartialCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id1/CorrelationMatrices/nodeomega_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R2_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id1/CorrelationMatrices/nodeomega_False_1_covariance.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R2_TraitsCovariance.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id1/CorrelationMatrices/nodeomega_False_1_partial_coefficient.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R2_TraitsPartialCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id2/CorrelationMatrices/nodeomega_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R3_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id2/CorrelationMatrices/nodeomega_False_1_covariance.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R3_TraitsCovariance.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id2/CorrelationMatrices/nodeomega_False_1_partial_coefficient.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R3_TraitsPartialCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id3/CorrelationMatrices/nodeomega_False_1_correlation.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R4_TraitsCorrelation.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id3/CorrelationMatrices/nodeomega_False_1_covariance.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R4_TraitsCovariance.tex
+\cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id3/CorrelationMatrices/nodeomega_False_1_partial_coefficient.tex ./manuscript/artworks/drosophila/18CDS_BranchOmega_R4_TraitsPartialCorrelation.tex
