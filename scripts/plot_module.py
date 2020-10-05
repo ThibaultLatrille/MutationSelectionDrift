@@ -94,6 +94,8 @@ def label_transform(s):
         return 'Effective population size ($N_{\\mathrm{e}} $)'
     elif s == "LogMutationRate" or s == "LogMutationRatePerTime":
         return 'Mutation rate per unit of time ($\\mu$)'
+    elif s == "TraitsLogGenomeSize":
+        return "Genome size (Mb)"
     elif s == "LogOmega":
         return 'Non-synonymous relative substitution rate ($\\omega$)'
     elif s == "TraitsAdult_weight_":
@@ -132,7 +134,7 @@ def label_id(s):
     if "run" in s:
         return s.split("_")[-2]
     else:
-        return s.split("-")[-2]
+        return s
 
 
 def label_corr_transform(s):
@@ -150,7 +152,7 @@ def expo(x, base10=False):
         return np.exp(x)
 
 
-def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0):
+def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0, font_size=14):
     if len(axis_dict) == 1: return
 
     is_log = "Log" in name.split(".")[-2] or "Traits" in name.split(".")[-2]
@@ -209,7 +211,7 @@ def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0)
                                 "+" if float(b) > 0 else "-"))
                     if a > 0:
                         ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                    ax.legend()
+                    ax.legend(fontsize=font_size)
             else:
                 idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
                 if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
@@ -221,11 +223,13 @@ def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0)
                         "+" if float(b) > 0 else "-"))
                     if a > 0:
                         ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                    ax.legend()
+                    ax.legend(fontsize=font_size)
 
             label = label_transform(name.split(".")[-2])
-            ax.set_ylabel(label + " - " + label_corr_transform(row_filename))
-            ax.set_xlabel(label + " - " + label_corr_transform(col_filename))
+            ax.set_ylabel(label + " - " + label_corr_transform(row_filename), size=font_size * 1.2)
+            ax.set_xlabel(label + " - " + label_corr_transform(col_filename), size=font_size * 1.2)
+            ax.tick_params(axis='both', which='major', labelsize=font_size * 1.2)
+            ax.tick_params(axis='both', which='minor', labelsize=font_size)
             if is_log:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
@@ -257,17 +261,8 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
         fig = plt.figure(figsize=(16, 16))
     ax = fig.add_subplot(111)
 
-    min_annot_list = [get_annot(n, feature + "_min") for n in tree.iter_leaves() if feature + "_min" in n.features]
-    if len(min_annot_list) > 0:
-        min_annot = min(min_annot_list)
-    else:
-        min_annot = min(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
-
-    max_annot_list = [get_annot(n, feature + "_max") for n in tree.iter_leaves() if feature + "_max" in n.features]
-    if len(max_annot_list) > 0:
-        max_annot = max(max_annot_list)
-    else:
-        max_annot = max(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
+    min_annot = min(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
+    max_annot = max(get_annot(n, feature) for n in tree.iter_leaves() if feature in n.features)
 
     cmap = plt.get_cmap("inferno")
     norm = colors.LogNorm(vmin=min_annot, vmax=max_annot)
@@ -285,7 +280,6 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
         if (feature + "_min" in n.features) and (feature + "_max" in n.features):
             min_node_annot = get_annot(n, feature + "_min")
             max_node_annot = get_annot(n, feature + "_max")
-            nodes.append({"min": min_node_annot, "max": max_node_annot})
 
         if n.is_leaf():
             y = node_pos[n]
@@ -338,16 +332,6 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
     ax.add_collection(LineCollection(vblankline, colors='black', linestyle=line_type, linewidth=vt_line_width * 2))
     ax.add_collection(vline_col)
 
-    def circle_radius(annot):
-        return ((max_circle_size - min_circle_size) * (annot - min_annot) / (
-                max_annot - min_annot) + min_circle_size) ** 2 / 2
-
-    for zorder, suffix in enumerate(["max", "min"]):
-        scat = ax.scatter(nodex, nodey, s=0, marker='o')
-        scat.set_sizes([circle_radius(n[suffix]) for n in nodes])
-        scat.set_color([color_map.to_rgba(n[suffix]) for n in nodes])
-        scat.set_zorder(10 + zorder)
-
     # scale line
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
@@ -365,12 +349,15 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
     ax.set_axis_off()
     # plt.tight_layout()
     color_map._A = []
-    ticks = "PopulationSize" in feature
-    cbar = fig.colorbar(color_map, ticks=([0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50] if ticks else None),
+    ticks = "PopulationSize" in feature or "MutationRatePerTime" in feature or "Omega" in feature
+    cbar = fig.colorbar(color_map, ticks=(
+        [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50] if ticks else None),
                         orientation='horizontal', pad=0, shrink=0.6)
-    cbar.ax.xaxis.set_tick_params(labelsize=font_size)
-    if ticks: cbar.ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-    cbar.ax.set_xlabel(label_transform(feature), labelpad=5, size=font_size * 1.2)
+    cbar.ax.xaxis.set_tick_params('major', labelsize=font_size * 1.8)
+    cbar.ax.xaxis.set_tick_params('minor', labelsize=0)
+    if ticks:
+        cbar.ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    cbar.ax.set_xlabel(label_transform(feature), labelpad=5, size=font_size * 1.8)
     plt.tight_layout()
     for o in fig.findobj():
         o.set_clip_on(False)

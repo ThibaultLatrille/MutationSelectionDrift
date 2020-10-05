@@ -99,8 +99,14 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.BranchTime-1-5.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep-1-5_BranchTime.pdf
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.BranchTime-1-6.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep-1-6_BranchTime.pdf
 # Trees (pdf) #
-\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
 \cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id0/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R1_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id1/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R2_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id2/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R3_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id3/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R4_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id4/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R5_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id5/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R6_LogPopulationSize.pdf
+
+\cp -f ./DataEmpirical/Experiments/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
 # Stats (pdf) #
 #\cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.ContrastPopulationSize.nhx.eco.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_ContrastPopulationSize_eco.pdf
 #\cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.ContrastPopulationSize.nhx.eye.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_ContrastPopulationSize_eye.pdf
@@ -114,7 +120,12 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize.nhx.eco.merged.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_LogPopulationSize_eco_merged.pdf
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize.nhx.eye.merged.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_LogPopulationSize_eye_merged.pdf
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize.nhx.pig.merged.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_LogPopulationSize_pig_merged.pdf
+\cp -f ./DataEmpirical/Analysis/DataFrame/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_node_False_1_run.LogPopulationSize.tex ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_LogPopulationSize.tex
+\cp -f ./DataEmpirical/Analysis/DataFrame/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6_node_False_1_run.LogMutationRatePerTime.tex ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime.tex
 
+\cp -f ./DataEmpirical/Analysis/DataFrame/anova_ocular_structure.txt ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_anova_ocular_structure.txt
+\cp -f ./DataEmpirical/Analysis/DataFrame/anova_pigmentation.txt ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_anova_pigmentation.txt
+\cp -f ./DataEmpirical/Analysis/DataFrame/anova_habitat.txt ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_anova_habitat.txt
 ### Mammals ###
 # Experiment correlation (pdf) #
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-2.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-2.pdf
@@ -132,12 +143,18 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-2.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-2.pdf
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-3.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-3.pdf
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-4.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/DataFrame/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_node_False_1_run.LogPopulationSize.tex ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize.tex
+\cp -f ./DataEmpirical/Analysis/DataFrame/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_node_False_1_run.LogMutationRatePerTime.tex ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime.tex
+
 # Profiles correlation (png) #
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_aa_profiles/correlation.aa-preferences-1-2.png ./manuscript/artworks/mammals/18CDS_SiteMutSel_R1_ProfileCorrelation.png
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_profiles/correlation.aa-preferences-1-2.png ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_ProfileCorrelation.png
 # Trees (pdf) #
-\cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id1/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R2_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id2/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R3_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id3/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R4_LogPopulationSize.pdf
+\cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.TraitsAdult_weight_.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogAdult_weight.pdf
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.TraitsFemale_maturity_.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogFemale_maturity.pdf
 \cp -f ./DataEmpirical/Experiments/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.TraitsMaximum_longevity_.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_R1_LogMaximum_longevity.pdf
@@ -168,7 +185,7 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Experiments/IWCat50LHT_Primates_CDS.ali_rootedtree.nhx/inference_aa_profiles/correlation.aa-preferences-1-2.png ./manuscript/artworks/primates/SiteMutSel_ProfileCorrelation.png
 \cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_profiles/correlation.aa-preferences-1-2.png  ./manuscript/artworks/primates/SiteMutSelBranchNe_ProfileCorrelation.png
 # Trees (pdf)
-\cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_trees/correlation.LogPopulationSize-2-3.pdf ./manuscript/artworks/primates/SiteMutSelBranchNe_LogPopulationSizeCorrelation.pdf
+\cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_trees/correlation.LogPopulationSize-1-2.pdf ./manuscript/artworks/primates/SiteMutSelBranchNe_LogPopulationSizeCorrelation.pdf
 \cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/primates/SiteMutSelBranchNe_LogMutationRatePerTime.pdf
 \cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/primates/SiteMutSelBranchNe_LogPopulationSize.pdf
 \cp -f ./DataEmpirical/Experiments/IWCat50LHTCalib_Primates_CDS.ali_rootedtree.nhx/inference_node_trees/node_False_1_run.Traitsgeneration_time.pdf ./manuscript/artworks/primates/SiteMutSelBranchNe_Loggeneration_time.pdf
@@ -204,6 +221,9 @@ mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkd
 \cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-2.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-2.pdf
 \cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-3.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-3.pdf
 \cp -f ./DataEmpirical/Analysis/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4/node_False_1_run.BranchTime-1-4.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_BranchTime-1-4.pdf
+\cp -f ./DataEmpirical/Analysis/DataFrame/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_node_False_1_run.LogPopulationSize.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize.tex
+\cp -f ./DataEmpirical/Analysis/DataFrame/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_node_False_1_run.LogMutationRatePerTime.tex ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_Rep_LogMutationRatePerTime.tex
+
 # Trees (pdf) #
 \cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogMutationRatePerTime.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_LogMutationRatePerTime.pdf
 \cp -f ./DataEmpirical/Experiments/Cat40_Drosophila_v3_rootedtree.lht.nhx_cds.600.list_Sample18_Replicates4_Id0/inference_node_trees/node_False_1_run.LogPopulationSize.pdf ./manuscript/artworks/drosophila/18CDS_SiteMutSelBranchNe_R1_LogPopulationSize.pdf

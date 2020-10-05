@@ -31,6 +31,8 @@ def format_header(s):
         return "$\\bm{N_{\\mathrm{e}}}$"
     elif s == "LogOmega":
         return "$\\bm{\\omega}$"
+    elif s == "LogGenomeSize":
+        return "Genome size"
     elif s == "LogMutationRate":
         return "$\\bm{\\mu}$"
     elif s == "piS":

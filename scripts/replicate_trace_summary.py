@@ -41,8 +41,7 @@ for exp in sorted([d for d in os.listdir("Experiments")]):
         elts = [exp.replace("_", " ") + " " + name] + [
             "${0:.2f} \\pm {1:.2f}$".format(np.nanmean(traces[m]), 1.96 * np.nanstd(traces[m])) if (m in traces) else ""
             for m in models]
-        table.writelines(" & ".join(elts) + "\\\\\n")
-        table.writelines("\\hline\n")
+        table.writelines(" & ".join(elts) + "\\\\ \\hline \n")
 
 table.writelines("\\end{tabular}\n")
 table.writelines("\\end{adjustbox}\n" +
