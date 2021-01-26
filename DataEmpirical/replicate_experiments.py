@@ -132,17 +132,17 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-p', '--prefix', required=False, type=str, default="Cat50", dest="prefix")
-    parser.add_argument('-n', '--name', required=False, type=str, default="OrthoMam", dest="name")
+    parser.add_argument('-n', '--name', required=True, type=str, default="OrthoMam", dest="name")
     # name can be one of ["Vertebrates", "47SP", "OrthoMam", "Isopods", "Primates"]
+    parser.add_argument('--tree', required=True, type=str, default="rootedtree.lht.nhx", dest="tree")
+    parser.add_argument('--cds', required=True, type=str, default="cds.highcoverage.list", dest="cds")
     parser.add_argument('--sample', required=False, type=int, default=18, dest="sample")
     parser.add_argument('--replicate', required=False, type=int, default=4, dest="replicate")
-    parser.add_argument('--tree', required=False, type=str, default="rootedtree.lht.nhx", dest="tree")
-    parser.add_argument('--cds', required=False, type=str, default="cds.highcoverage.list", dest="cds")
-    parser.add_argument('--lht', required=False, type=str, default="life_history_traits.tsv", dest="lht")
+    parser.add_argument('--lht', required=False, type=str, default="", dest="lht")
     parser.add_argument('--calibs', required=False, type=str, default="", dest="calibs")
     parser.add_argument('--intersection', required=False, type=bool, default=False, dest="intersection")
-    parser.add_argument('-s', '--screen', required=False, type=bool, default=True, dest="screen")
-    parser.add_argument('-b', '--sbatch', required=False, type=bool, default=True, dest="sbatch")
+    parser.add_argument('-s', '--screen', required=False, type=bool, default=False, dest="screen")
+    parser.add_argument('-b', '--sbatch', required=False, type=bool, default=False, dest="sbatch")
     parser.add_argument('-c', '--nbr_cpu', required=False, type=int, default=4, dest="nbr_cpu")
     parser.add_argument('--random_state', required=False, type=int, default=0, dest="random_state")
 

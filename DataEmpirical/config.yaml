@@ -3,7 +3,7 @@ INFERENCE_REPLICATE:
   MODELS: [node, aa, nodeomega]
   POLYMORPHISM: [false]
 INFERENCE:
-  RESTART: true
+  RESTART: false
   POINTS: 4000
   PRECISION: 12
   NCAT: 50
