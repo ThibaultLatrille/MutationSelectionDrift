@@ -1,16 +1,16 @@
 EXPERIMENT:
   COMPILE: false
 SIMULATION:
-  TREE: SimuEvol/data/trees/primates.short.nwk
-  PREFERENCES: SimuEvol/data/preferences/np_1.prefs
+  TREE: SimuEvol/data/trees/placnr.lht.rootedtree.nhx
+  PREFERENCES: SimuEvol/data/preferences/np_5000_498.prefs
   NUC_MATRIX: SimuEvol/data/matrices/nucleotide_GTR.tsv
-  PRECISION_MATRIX: DataSimulated/matrices/tr20_df1_3953.tsv
-  MUTATION_RATE_PER_GENERATION: 0.1
-  ROOT_AGE: 10
+  PRECISION_MATRIX: SimuEvol/data/matrices/precision3x3.tsv
+  MUTATION_RATE_PER_GENERATION: 1.0e-8
+  ROOT_AGE: 150e6
   GENERATION_TIME: 5
-  EXON_SIZE: 1
-  SEED: 3953
-  BRANCH_WISE_CORRELATION: true
+  EXON_SIZE: 300
+  SEED: 65489
+  BRANCH_WISE_CORRELATION: false
   FIXED_POP_SIZES: false
   FIXED_MUT_RATE: false
   FIXED_GENERATION_TIME: false
@@ -35,25 +35,23 @@ SimuGeo:
   COMPLEXITY: 3
   NBR_EXONS: 16
 INFERENCE_REPLICATE:
-  CHAINS: [1]
+  CHAINS: [1, 2]
   POLYMORPHISM: [false]
-  MODELS: [nodetraits]
-  SIMULATORS: [SimuDiv]
+  MODELS: [node, aa, nodeomega]
+  SIMULATORS: [SimuDiv, SimuFold, SimuGeo, SimuPoly]
 INFERENCE:
-  RESTART: false
-  POINTS: 200
+  RESTART: true
+  POINTS: 4000
   PRECISION: 10
   NCAT: 50
 INFERENCE_NODE:
-  TRAITS: true
-  FOSSILS: 999
-  NBR_TRAITS: 20
-  DOF: 1
+  TRAITS: false
+  FOSSILS: 0
   MOVE_ROOT_POP_SIZE: false
   CLAMP_PREFERENCES: false
   CLAMP_POP_SIZES: false
   CLAMP_NUC_MATRIX: false
   CLAMP_CORR_MATRIX: false
-  ARITHMETIC: true
+  ARITHMETIC: false
 PLOT:
-  BURN_IN: 50
+  BURN_IN: 1000

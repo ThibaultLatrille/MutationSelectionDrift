@@ -354,7 +354,7 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
         [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50] if ticks else None),
                         orientation='horizontal', pad=0, shrink=0.6)
     cbar.ax.xaxis.set_tick_params('major', labelsize=font_size * 1.8)
-    cbar.ax.xaxis.set_tick_params('minor', labelsize=0)
+    cbar.ax.xaxis.set_tick_params('minor', labelsize=font_size)
     if ticks:
         cbar.ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     cbar.ax.set_xlabel(label_transform(feature), labelpad=5, size=font_size * 1.8)

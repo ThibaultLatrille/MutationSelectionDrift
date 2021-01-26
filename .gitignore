@@ -20,6 +20,7 @@ DataEmpirical/Drosophila*
 DataEmpirical/Guinet
 DataEmpirical/Simiiformes
 DataEmpirical/*/singlegene_alignments
+DataEmpirical/*/singlegene_alignments_all
 DataEmpirical/*/gblocks
 DataEmpirical/*/fasta
 DataEmpirical/*/.snakemake
@@ -31,7 +32,9 @@ DataSimulated/matrices/
 DataSimulated/analyse/
 Data*/Experiments/*
 Data*/Experiments.Legacy
+Data*/Experiments.tar.xz
 Data*/Analysis
+Data*/Analysis.Legacy
 Data*/Traces
 orthomam.tsv
 *.fa
