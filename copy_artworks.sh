@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-cd ~/MutationSelectionDrift/
 rm -rf ./manuscript/artworks/primates/; rm -rf ./manuscript/artworks/mammals/; rm -rf ./manuscript/artworks/isopods/; rm -rf ./manuscript/artworks/drosophila/; rm -rf ./manuscript/artworks/simulations/
-mkdir ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkdir ./manuscript/artworks/isopods/; mkdir ./manuscript/artworks/drosophila/; mkdir ./manuscript/artworks/simulations/
+mkdir -p ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; mkdir ./manuscript/artworks/isopods/; mkdir ./manuscript/artworks/drosophila/; mkdir ./manuscript/artworks/simulations/
 
 ### Simulations ###
 # Profiles correlation (png) #
