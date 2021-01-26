@@ -229,7 +229,7 @@ else:
              config=EXPERIMENT + '/config.INFERENCE'
         params:
               time="18-00:00", mem=1500, threads=1,
-              ali=lambda w: ' -a {input.simu}.ali ' if ("nodetraits" != w.model) else ' --df {0} '.format(config['INFERENCE_NODE']['DOF']) ,
+              ali=lambda w, input: ' -a {0}.ali '.format(input.simu) if ("nodetraits" != w.model) else ' --df {0} '.format(config['INFERENCE_NODE']['DOF']),
               mutsel=lambda w: MUTSEL_PARAMS if ("aa" == w.model or "node" == w.model) else "",
               poly=lambda wildcards: " -p" if wildcards.polymorphism.lower() == 'true' else "",
               node=lambda wildcards: INFERENCE_NODE_PARAMS if wildcards.model == "node" else "",

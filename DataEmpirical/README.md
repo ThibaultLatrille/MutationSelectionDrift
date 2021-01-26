@@ -24,7 +24,7 @@ The list of the alignment filenames *must be* provided trought the parameter '--
 
 
 ```python
-!python3 replicate_experiments.py --prefix Ncat50 --name OrthoMam --tree rootedtree.lht.nhx --cds cds.highcoverage.list --sample 18 --replicate 4 --lht life_history_traits.tsv --nbr_cpu 4
+!python3 replicate_experiments.py --prefix Cat50 --name OrthoMam --tree rootedtree.lht.nhx --cds cds.highcoverage.list --sample 18 --replicate 4 --lht life_history_traits.tsv --nbr_cpu 4
 
 ```
 
@@ -114,9 +114,4 @@ Without replicates:
 
 ```python
 !cd ../scripts && python3 replicate_analysis.py
-```
-
-
-```python
-
 ```

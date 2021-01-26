@@ -40,7 +40,7 @@ INFERENCE_REPLICATE:
   MODELS: [node, aa, nodeomega]
   SIMULATORS: [SimuDiv, SimuFold, SimuGeo, SimuPoly]
 INFERENCE:
-  RESTART: true
+  RESTART: false
   POINTS: 4000
   PRECISION: 10
   NCAT: 50
@@ -53,5 +53,6 @@ INFERENCE_NODE:
   CLAMP_NUC_MATRIX: false
   CLAMP_CORR_MATRIX: false
   ARITHMETIC: false
+  DOF: 1
 PLOT:
   BURN_IN: 1000

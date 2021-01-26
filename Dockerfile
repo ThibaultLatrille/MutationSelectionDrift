@@ -17,5 +17,4 @@ RUN git clone https://github.com/ThibaultLatrille/SimuEvol && cd SimuEvol && mak
 
 # Install python packages
 RUN apt-get install -qq -y python3-dev python3-pip screen
-RUN cd DataEmpirical && ./extract_alignments.sh
 RUN pip3 install jupyterlab snakemake numpy matplotlib statsmodels seaborn pandas ete3
