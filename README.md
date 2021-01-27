@@ -56,16 +56,16 @@ sudo apt install -qq -y make cmake clang openmpi-bin openmpi-common
 ```
 Clone and compile the C++ code for *BayesCode*
 ```
-git clone https://github.com/bayesiancook/bayescode && cd bayescode && git checkout chronogram && make release && cd ..
+git clone https://github.com/ThibaultLatrille/bayescode && cd bayescode && git checkout v1.0 && make release && cd ..
 ```
 Clone and compile the C++ code for *SimuEvol*
 ```
-git clone https://github.com/ThibaultLatrille/SimuEvol && cd SimuEvol && make release && cd ..
+git clone https://github.com/ThibaultLatrille/SimuEvol && cd SimuEvol && git checkout v1.0 && make release && cd ..
 ```
 Install python3 packages
 ```
 sudo apt install -qq -y python3-dev python3-pip screen
-pip3 install jupyterlab snakemake numpy matplotlib statsmodels seaborn pandas ete3 --user
+pip3 install jupyterlab snakemake numpy matplotlib statsmodels pandas ete3 --user
 ```
 If you wish, you can also run a Jupyter Lab to open the notebooks.
 ```
