@@ -152,7 +152,7 @@ def expo(x, base10=False):
         return np.exp(x)
 
 
-def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0, font_size=14):
+def plot_correlation(name, axis_dict, err_dict, std_dict=None, global_min_max=False, alpha=1.0, font_size=14):
     if len(axis_dict) == 1: return
 
     is_log = "Log" in name.split(".")[-2] or "Traits" in name.split(".")[-2]
@@ -183,6 +183,10 @@ def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0,
             ax = fig.add_subplot(111)
             if row_filename == "Simulation": continue
             if col_filename != "Simulation" and col_filename >= row_filename: continue
+            dot = name.rfind('.')
+            outpath = "{}-{}-{}.".format(name[:dot],
+                                         col_filename if col_filename == "Simulation" else label_id(col_filename),
+                                         label_id(row_filename))
             ax.set_xlim(min_max_axis[col_filename])
             ax.set_ylim(min_max_axis[row_filename])
 
@@ -198,32 +202,45 @@ def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0,
             elif row_filename in err_dict:
                 ax.errorbar(col_axis, row_axis, yerr=err_dict[row_filename], fmt='o', marker=None, mew=0,
                             ecolor=GREEN, **error_kwargs)
-            if is_log:
-                idf = np.logspace(np.log10(min(min_max_axis[col_filename])),
-                                  np.log10(max(min_max_axis[col_filename])), 30)
-                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                if "LogPopulationSize" in outpath:
+                    out = dict()
+                    ci_overlap = len([x for x, y, y_minus, y_plus in zip(col_axis, row_axis, err_dict[row_filename][0],
+                                                                         err_dict[row_filename][1]) if
+                                      y - y_minus <= x <= y + y_plus]) / len(row_axis)
+                    out["ci_overlap"] = [ci_overlap]
+                    if row_filename in std_dict and len(std_dict[row_filename]) > 0:
+                        std_row = std_dict[row_filename]
+                        if is_log: std_row = expo(std_row, base10)
+                        assert (len(col_axis) == len(std_row))
+                        std_list = [abs(x - y) / s for x, y, s in zip(col_axis, row_axis, std_row) if s != 0.0]
+                        out["z-score-point-std"] = [np.mean(std_list)]
+
+                    std_x = np.std(col_axis)
+                    std_post = [abs(x - y) / std_x for x, y in zip(col_axis, row_axis)]
+                    out["z-score-mean-std"] = [np.mean(std_post)]
+
+                    error = [abs(x - y) / x for x, y in zip(col_axis, row_axis)]
+                    out["error"] = [np.mean(error)]
+                    out["precision"] = [1 - np.mean(error)]
+                    pd.DataFrame(out).to_csv(outpath + "tsv", sep='\t', index=False)
+
+            if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                if is_log:
+                    idf = np.logspace(np.log10(min(min_max_axis[col_filename])),
+                                      np.log10(max(min_max_axis[col_filename])), 30)
                     model = sm.OLS(np.log(row_axis), sm.add_constant(np.log(col_axis)))
-                    results = model.fit()
-                    b, a = results.params[0:2]
-                    ax.plot(idf, np.exp(a * np.log(idf) + b), '-', color=RED,
-                            label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
-                                tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
-                                "+" if float(b) > 0 else "-"))
-                    if a > 0:
-                        ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                    ax.legend(fontsize=font_size)
-            else:
-                idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
-                if row_filename != col_filename and len(set(col_axis)) > 1 and len(set(row_axis)) > 1:
+                else:
+                    idf = np.linspace(min(min_max_axis[col_filename]), max(min_max_axis[col_filename]), 30)
                     model = sm.OLS(row_axis, sm.add_constant(col_axis))
-                    results = model.fit()
-                    b, a = results.params[0:2]
-                    ax.plot(idf, a * idf + b, '-', color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
+                results = model.fit()
+                b, a = results.params[0:2]
+                ax.plot(idf, np.exp(a * np.log(idf) + b) if is_log else a * idf + b, '-',
+                        color=RED, label=r"$y={0}x {3} {1}$ ($r^2={2})$".format(
                         tex_float(float(a)), tex_float(abs(float(b))), tex_float(results.rsquared),
                         "+" if float(b) > 0 else "-"))
-                    if a > 0:
-                        ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
-                    ax.legend(fontsize=font_size)
+                if a > 0:
+                    ax.plot(idf, idf, '-', color='black', label=r"$y=x$")
+                ax.legend(fontsize=font_size)
 
             label = label_transform(name.split(".")[-2])
             ax.set_ylabel(label + " - " + label_corr_transform(row_filename), size=font_size * 1.2)
@@ -233,11 +250,9 @@ def plot_correlation(name, axis_dict, err_dict, global_min_max=False, alpha=1.0,
             if is_log:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
-            dot = name.rfind('.')
+
             plt.tight_layout()
-            plt.savefig("{}-{}-{}.{}".format(name[:dot],
-                                             col_filename if col_filename == "Simulation" else label_id(col_filename),
-                                             label_id(row_filename), name[dot + 1:]), format=name[dot + 1:])
+            plt.savefig(outpath + name[dot + 1:], format=name[dot + 1:])
             plt.clf()
             plt.close('all')
 
@@ -351,7 +366,8 @@ def plot_tree(tree, feature, outputpath, font_size=14, line_type="-", vt_line_wi
     color_map._A = []
     ticks = "PopulationSize" in feature or "MutationRatePerTime" in feature or "Omega" in feature
     cbar = fig.colorbar(color_map, ticks=(
-        [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50] if ticks else None),
+        [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20,
+         50] if ticks else None),
                         orientation='horizontal', pad=0, shrink=0.6)
     cbar.ax.xaxis.set_tick_params('major', labelsize=font_size * 1.8)
     cbar.ax.xaxis.set_tick_params('minor', labelsize=font_size)

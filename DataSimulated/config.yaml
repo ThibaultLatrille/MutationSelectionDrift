@@ -21,10 +21,10 @@ SimuFold:
   POP_SIZE: 1e5
   CUT_OFF: 7.0
 SimuDiv:
-  BETA: 1.0
+  BETA: 4.0
   NBR_GRID_STEP: 100
 SimuPoly:
-  BETA: 1.0
+  BETA: 4.0
   POP_SIZE: 5000
   SAMPLE_SIZE: 20
   NOISE_SIGMA: 0.2
@@ -35,10 +35,10 @@ SimuGeo:
   COMPLEXITY: 3
   NBR_EXONS: 16
 INFERENCE_REPLICATE:
-  CHAINS: [1, 2]
+  CHAINS: [1]
   POLYMORPHISM: [false]
-  MODELS: [node, aa, nodeomega]
-  SIMULATORS: [SimuDiv, SimuFold, SimuGeo, SimuPoly]
+  MODELS: [node]
+  SIMULATORS: [SimuDiv, SimuPoly]
 INFERENCE:
   RESTART: false
   POINTS: 4000
@@ -53,6 +53,5 @@ INFERENCE_NODE:
   CLAMP_NUC_MATRIX: false
   CLAMP_CORR_MATRIX: false
   ARITHMETIC: false
-  DOF: 1
 PLOT:
   BURN_IN: 1000

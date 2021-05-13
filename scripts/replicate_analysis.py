@@ -101,7 +101,21 @@ for exp in exp_dirs:
                 frames.append(pd.DataFrame(d))
             merged = pd.concat(frames)
             for trait, trait_name in dict_trait.items():
-                ax = merged.boxplot(column=[label], by=trait_name, fontsize=21, notch=True)
+                bp = merged.boxplot(column=[label], by=trait_name, fontsize=18, notch=True,
+                                    patch_artist=True, return_type="dict")
+                [[item.set_linewidth(3) for item in bp[key]['boxes']] for key in bp.keys()]
+                [[item.set_linewidth(3) for item in bp[key]['fliers']] for key in bp.keys()]
+                [[item.set_linewidth(3) for item in bp[key]['medians']] for key in bp.keys()]
+                [[item.set_linewidth(3) for item in bp[key]['whiskers']] for key in bp.keys()]
+                [[item.set_linewidth(3) for item in bp[key]['caps']] for key in bp.keys()]
+
+                [[item.set_color(BLUE) for item in bp[key]['boxes']] for key in bp.keys()]
+                [[item.set_color("black") for item in bp[key]['fliers']] for key in bp.keys()]
+                [[item.set_color(GREEN) for item in bp[key]['medians']] for key in bp.keys()]
+                [[item.set_color(BLUE) for item in bp[key]['whiskers']] for key in bp.keys()]
+                [[item.set_color("black") for item in bp[key]['caps']] for key in bp.keys()]
+
+                ax = plt.gca()
                 ax.set_ylabel(label, fontsize=22)
                 ax.set_xlabel("")
                 ax.set_title(trait_name, fontsize=26)

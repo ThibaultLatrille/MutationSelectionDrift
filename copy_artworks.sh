@@ -4,6 +4,8 @@ mkdir -p ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; 
 
 ### Simulations ###
 # Profiles correlation (png) #
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuDiv_node_profiles/np-5000-30_prefs.pdf ./manuscript/artworks/simulations/Profiles_SimuDiv.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuDiv_node_profiles/SimuDiv-node-False-1-read_prefs.pdf ./manuscript/artworks/simulations/Profiles_SimuDiv_Estimated.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuDiv_aa_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/BranchWise_SimuDiv_SiteMutSel_ProfileCorrelation.png
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuPoly_aa_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/BranchWise_SimuPoly_SiteMdutSel_ProfileCorrelation.png
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuDiv_node_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/BranchWise_SimuDiv_SiteMutSelBranchNe_ProfileCorrelation.png
@@ -35,6 +37,8 @@ mkdir -p ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; 
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000BranchWise/inference_SimuGeo_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/BranchWise_SimuGeo_BranchOmega_BranchCorrelation_LogOmega.pdf
 # ------------- #
 # Profiles correlation (png) #
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_node_profiles/np-5000-498_prefs.pdf ./manuscript/artworks/simulations/Profiles_SimuPoly.pdf
+\cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_node_profiles/SimuPoly-node-False-1-read_prefs.pdf ./manuscript/artworks/simulations/Profiles_SimuPoly_Estimated.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuDiv_aa_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/SimuDiv_SiteMutSel_ProfileCorrelation.png
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_aa_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/SimuPoly_SiteMutSel_ProfileCorrelation.png
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuDiv_node_profiles/correlation.aa-preferences-Simulation-1.png ./manuscript/artworks/simulations/SimuDiv_SiteMutSelBranchNe_ProfileCorrelation.png
@@ -65,9 +69,13 @@ mkdir -p ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; 
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuPoly_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/SimuPoly_BranchOmega_BranchCorrelation_LogOmega.pdf
 \cp -f ./DataSimulated/Experiments/Gen5Ma150L5000/inference_SimuGeo_nodeomega_trees/correlation.LogOmega-Simulation-1.pdf ./manuscript/artworks/simulations/SimuGeo_BranchOmega_BranchCorrelation_LogOmega.pdf
 
+# Identifiability
+\cp -f ./DataSimulated/Analysis/identifiability.Gen5Ma150L5000.pdf ./manuscript/artworks/simulations/identifiability.pdf
 
 ### Isopods ###
 # Experiment correlation (pdf) #
+\cp -f ./DataEmpirical/Analysis/identifiability.Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6.pdf ./manuscript/artworks/isopods/identifiability.pdf
+
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize-1-2.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep-1-2_LogPopulationSize.pdf
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize-1-3.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep-1-3_LogPopulationSize.pdf
 \cp -f ./DataEmpirical/Analysis/Ncat50_Isopods_rootedtree.nhx_cds.highcoverage.list_Sample12_Replicates6/node_False_1_run.LogPopulationSize-1-4.pdf ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_Rep-1-4_LogPopulationSize.pdf
@@ -127,6 +135,7 @@ mkdir -p ./manuscript/artworks/primates/; mkdir ./manuscript/artworks/mammals/; 
 \cp -f ./DataEmpirical/Analysis/DataFrame/anova_habitat.txt ./manuscript/artworks/isopods/12CDS_SiteMutSelBranchNe_anova_habitat.txt
 ### Mammals ###
 # Experiment correlation (pdf) #
+\cp -f ./DataEmpirical/Analysis/identifiability.Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4.pdf ./manuscript/artworks/mammals/identifiability.pdf
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-2.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-2.pdf
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-3.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-3.pdf
 \cp -f ./DataEmpirical/Analysis/Cat50_OrthoMam_rootedtree.lht.nhx_cds.highcoverage.list_Sample18_Replicates4/node_False_1_run.LogPopulationSize-1-4.pdf ./manuscript/artworks/mammals/18CDS_SiteMutSelBranchNe_Rep_LogPopulationSize-1-4.pdf

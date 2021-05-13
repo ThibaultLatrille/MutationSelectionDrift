@@ -3,26 +3,25 @@ for EXPERIMENT in ./DataEmpirical/Experiments/*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}
-  rm -rf inference_*_trees
-  rm -rf ./CorrelationMatrices
-  rm -rf ./all_correlation_matrix
-  rm -rf all_profiles
   snakemake --unlock
-  snakemake --touch inference
-  snakemake --printshellcmds --rerun-incomplete -j 4
+  snakemake --touch
+  rm -rf *_traces
+  snakemake --printshellcmds --rerun-incomplete -j 8
   cd ../../..
 done
 
-for EXPERIMENT in ./DataSimulated/Experiments/*; do
+for EXPERIMENT in ./DataSimulated/Experiments/Gen5*; do
   NAME=$(basename "${EXPERIMENT}")
   echo "${NAME}"
   cd ${EXPERIMENT}
-  rm -rf all_profiles
-  rm -rf all_traces
-  rm -rf all_tress
-  rm -rf simulation_*
   snakemake --unlock
-  snakemake --touch inference
-  snakemake --printshellcmds --rerun-incomplete -j 4
+  snakemake --touch
+  rm -rf *_traces
+  snakemake --printshellcmds --rerun-incomplete -j 8
   cd ../../..
+done
+
+
+for ID in {2540527..2540813..1}; do
+  scancel $ID
 done

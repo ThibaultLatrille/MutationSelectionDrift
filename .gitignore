@@ -36,7 +36,6 @@ Data*/Experiments.tar.xz
 Data*/Analysis
 Data*/Analysis.Legacy
 Data*/Traces
-orthomam.tsv
 *.fa
 *.bestTree
 *.phy

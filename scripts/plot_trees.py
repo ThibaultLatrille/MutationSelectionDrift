@@ -40,7 +40,7 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, simu_tree):
                 plot_tree(tree.copy(), feature, "{0}/{1}.{2}.pdf".format(output_plot, filename, feature))
 
     for feature in axis_trees:
-        axis_dict, err_dict = dict(), dict()
+        axis_dict, err_dict, std_dict = dict(), dict(), dict()
         if feature in simu_dict:
             axis_dict["Simulation"] = simu_dict[feature]
         for filename, tree in zip(axis_filenames[feature], axis_trees[feature]):
@@ -51,10 +51,12 @@ def plot_trees_from_traces(input_trace, output_plot, simu_dict, simu_tree):
                 [to_float(getattr(n, feature + "_max")) for n in tree.traverse() if feature + "_max" in n.features])
             axis_dict[filename] = values
             err_dict[filename] = np.vstack((np.abs(values - min_values), np.abs(max_values - values)))
+            std_dict[filename] = np.array(
+                [to_float(getattr(n, feature + "_std")) for n in tree.traverse() if feature + "_std" in n.features])
 
         if len(axis_dict) > 1:
             path = '{0}/correlation.{1}.pdf'.format(output_plot, feature)
-            plot_correlation(path, axis_dict, err_dict, global_min_max=False)
+            plot_correlation(path, axis_dict, err_dict, std_dict=std_dict, global_min_max=False)
 
 
 def open_simulation(input_simu):

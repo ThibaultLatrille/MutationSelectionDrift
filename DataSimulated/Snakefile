@@ -18,7 +18,7 @@ if config['SIMULATION']['PREFERENCES'] == "SimuFold":
 else:
     PREFERENCES = copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PREFERENCES'])
 
-# Parameters for the simulation
+# Parameters for the simulation
 SIMULATION_PARAMS = '--newick ' + TREE
 SIMULATION_PARAMS += ' --nuc_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['NUC_MATRIX'])
 SIMULATION_PARAMS += ' --precision_matrix ' + copy_params(EXPERIMENT, ROOT, config['SIMULATION']['PRECISION_MATRIX'])
@@ -103,11 +103,13 @@ print(INFERENCE_MODELS)
 
 rule all:
     input:
-         EXPERIMENT + '/all_profiles',
-         expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
-         expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
+         # EXPERIMENT + '/all_profiles',
+         # expand(EXPERIMENT + '/simulation_{simumode}_plot', simumode=INFERENCE_SIMULATORS),
+         # expand(EXPERIMENT + '/inference_{simumode}_traces', simumode=INFERENCE_SIMULATORS),
          EXPERIMENT + '/all_correlation_matrix',
-         EXPERIMENT + '/all_trees'
+         expand(EXPERIMENT + '/inference_{simumode}_{model}_trees',
+                         simumode=INFERENCE_SIMULATORS,
+                         model=[i for i in INFERENCE_MODELS if "node" in i])
 
 rule make_bayescode:
     output: touch(EXPERIMENT + "/make_bayescode")
@@ -175,7 +177,9 @@ rule plot_simulation:
     input:
          src=ROOT + "/scripts/plot_simulation.py",
          simu=rules.run_simulation.output
-    shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot}'
+    params:
+        prefs=lambda wildcards: "--prefs {0} --beta {1}".format(PREFERENCES, config[wildcards.simumode]["BETA"]) if (wildcards.simumode in ["SimuDiv", "SimuPoly"] ) else ""
+    shell: 'mkdir -p {output.plot} && python3 {input.src} --tree {input.simu}.nhx --output {output.plot} {params.prefs}'
 
 rule draw_fossils:
     output: EXPERIMENT + "/{simumode}_exp.fossils.tsv.drawn"
@@ -324,10 +328,3 @@ rule plot_trees:
                      polymorphism=INFERENCE_POLYMORPHISM)
     shell:
          'mkdir -p {output.plot} && python3 {input.src} --trace {input.trace} --simulation {input.simu} --output {output.plot}'
-
-rule all_trees:
-    output: touch(EXPERIMENT + '/all_trees')
-    input:
-         expand(EXPERIMENT + '/inference_{simumode}_{model}_trees',
-                simumode=INFERENCE_SIMULATORS,
-                model=[i for i in INFERENCE_MODELS if "node" in i])
