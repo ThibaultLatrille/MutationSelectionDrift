@@ -13,9 +13,9 @@ def import_ali(filepath):
         for line in ali_file:
             if line != "\n":
                 name, seq = line.replace("\t", " ").replace("  ", " ").replace("\n", "").split(" ")
-                assert(int(size) == len(seq))
+                assert (int(size) == len(seq))
                 ali_dict[name] = seq
-    assert(int(sp) == len(ali_dict))
+    assert (int(sp) == len(ali_dict))
     return ali_dict
 
 
@@ -31,7 +31,8 @@ def export_ali(filepath, ali_dict):
                     print("Unexpected character {0} in sequence {1} at position {2}".format(n, name, i + 1))
 
 
-def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht, calibs, intersection, screen, sbatch, nbr_cpu, random_state):
+def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht, calibs, intersection, screen, sbatch,
+                      nbr_cpu, random_state):
     root_path = os.getcwd() + "/" + name
     tree = Tree("{0}/{1}".format(root_path, tree_name), format=1)
     print("{0} extant species found for the rooted tree/".format(len(tree)))
@@ -51,7 +52,7 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
     for rep in range(replicate):
         random_state += 654
         experiment = prefix + "_{0}_{1}_{2}_Sample{3}_Replicates{4}_Id{5}".format(name, tree_name, cds_list, sample,
-                                                                                 replicate, rep)
+                                                                                  replicate, rep)
         exp_path = os.getcwd() + '/Experiments/' + experiment
         os.makedirs(exp_path, exist_ok=True)
         os.system('cp config.yaml {0}'.format(exp_path))
@@ -77,6 +78,8 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
             vals = [genes.loc[rep, :]]
         else:
             vals = genes.sample(sample, random_state=random_state).values
+
+        pd.DataFrame(vals).to_csv(exp_path + "/CDS.list", index=False, header=None)
         for selected in vals:
             alignments.append(import_ali("{0}/singlegene_alignments/{1}.ali".format(root_path, selected[0])))
             taxa = taxa.intersection(alignments[-1].keys()) if intersection else taxa.union(alignments[-1].keys())
@@ -131,7 +134,7 @@ def create_experiment(prefix, name, sample, replicate, tree_name, cds_list, lht,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--prefix', required=False, type=str, default="Cat50", dest="prefix")
+    parser.add_argument('-p', '--prefix', required=False, type=str, default="List", dest="prefix")
     parser.add_argument('-n', '--name', required=True, type=str, default="OrthoMam", dest="name")
     # name can be one of ["Vertebrates", "47SP", "OrthoMam", "Isopods", "Primates"]
     parser.add_argument('--tree', required=True, type=str, default="rootedtree.lht.nhx", dest="tree")
