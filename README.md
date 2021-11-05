@@ -52,7 +52,7 @@ To note, the local sub-folders *./DataEmpirical* and *./DataSimulated* are kept 
 ### 1.b. Red pill - Installation on debian
 Install the compiling toolchains:
 ```
-sudo apt install -qq -y make cmake clang openmpi-bin openmpi-common
+sudo apt install -qq -y make cmake clang openmpi-bin openmpi-common libopenmpi-dev
 ```
 Clone and compile the C++ code for *BayesCode*
 ```
