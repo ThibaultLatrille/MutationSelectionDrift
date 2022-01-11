@@ -4,7 +4,7 @@ This repository is meant to provide the necessary scripts and data to reproduce 
 The experiments can either run on a local computer or in a cluster configuration (slurm).
 
 Moreover, this repository gives the tools to produce your own experiment on your dataset, given you have at least 
-an DNA alignment file and an associated rooted tree topology (branch lengths are not required).
+a DNA alignment file and an associated rooted tree topology (branch lengths are not required).
 
 The experiments are meant to run on Linux/Unix/MacOS operating systems.
 However a docker container is provided and a WindowsOS installation (not tested by the author) should in principle work too, at your own peril.
@@ -92,7 +92,7 @@ You wish this changes benefit to all users of these software?
 
 Please, feel free to open pull-requests in their respective GitHub repository:
 * https://github.com/ThibaultLatrille/SimuEvol 
-* https://github.com/bayesiancook/bayescode/tree/chronogram
+* https://github.com/ThibaultLatrille/bayescode
 
 ## Licence
 
