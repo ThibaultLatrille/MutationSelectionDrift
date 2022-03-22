@@ -1,4 +1,10 @@
-# Mutation-Selection-Drift
+
+**Inferring long-term effective population size with mutation–selection models**\
+Thibault Latrille, Vincent Lanore, Nicolas Lartillot,\
+_Molecular Biology and Evolution_, Volume 38, Issue 10, October 2021, Pages 4573–4587,\
+https://doi.org/10.1093/molbev/msab160 
+
+---
 
 This repository is meant to provide the necessary scripts and data to reproduce the figures shown in the manuscript.
 The experiments can either run on a local computer or in a cluster configuration (slurm).
