@@ -4,18 +4,16 @@ Thibault Latrille, Vincent Lanore, Nicolas Lartillot,\
 _Molecular Biology and Evolution_, Volume 38, Issue 10, October 2021, Pages 4573–4587,\
 https://doi.org/10.1093/molbev/msab160 
 
-**Compiled binaries and instructions for BayesCode are available at https://github.com/ThibaultLatrille/bayescode**
-
 ---
 
-This repository is meant to provide the necessary scripts and data to reproduce the figures shown in the manuscript.
-The experiments can either run on a local computer or in a cluster configuration (slurm).
+This repository is meant to provide the necessary scripts to reproduce the figures shown in the manuscript, using _BayesCode_ [v1.0](https://github.com/ThibaultLatrille/bayescode/releases/tag/v1.0).
+The underlying dataset necessary to reproduce the figures shown in the manuscript is available at [https://doi.org/10.6084/m9.figshare.13644110.v1](https://doi.org/10.6084/m9.figshare.13644110.v1). Please see the bash script `analyses_download.sh` to download and extract.
 
-Moreover, this repository gives the tools to produce your own experiment on your dataset, given you have at least 
-a DNA alignment file and an associated rooted tree topology (branch lengths are not required).
+If you wish to use _BayesCode_ on your own dataset to estimate long-term changes in effective population size, please see instructions for how install and run the up-to-date version of _BayesCode_ at https://github.com/ThibaultLatrille/bayescode.
 
 The experiments are meant to run on Linux/Unix/MacOS operating systems.
-However a docker container is provided and a WindowsOS installation (not tested by the author) should in principle work too, at your own peril.
+The experiments can either run on a local computer or in a cluster configuration (slurm).
+However a docker container is provided and a WindowsOS installation should in principle work too (not tested by the author), at your own peril.
 
 If problems and/or questions are encountered, feel free to [open issues](https://github.com/ThibaultLatrille/MutationSelectionDrift/issues).
 
@@ -88,6 +86,8 @@ To replicate figure 3 of the manuscript on mammalian dataset, open the jupyter n
 ## 3. Run your own experiments 
 
 Instructions can be found in the jupyter notebook [ReplicateExperiments.ipynb](https://github.com/ThibaultLatrille/MutationSelectionDrift/blob/master/DataEmpirical/ReplicateExperiments.ipynb) in the sub-folder *DataEmpirical*.
+
+This repository gives the tools to produce your own experiment on your dataset, given you have at least a DNA alignment file and an associated rooted tree topology (branch lengths are not required). However, we recommend to you use the latest version of [BayesCode](https://github.com/ThibaultLatrille/bayescode) to run experiments on your own files instead.
 
 ## 4. Add features or debug in the python scripts
 You made modifications to one of the python script, a notebook, this README.md, or you added new features.
