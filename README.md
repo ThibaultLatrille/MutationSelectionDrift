@@ -4,6 +4,10 @@ Thibault Latrille, Vincent Lanore, Nicolas Lartillot,\
 _Molecular Biology and Evolution_, Volume 38, Issue 10, October 2021, Pages 4573–4587,\
 https://doi.org/10.1093/molbev/msab160 
 
+**Compiled binaries and instructions for BayesCode are available at https://github.com/ThibaultLatrille/bayescode**
+
+**LaTeX for the manuscript and figures are available at https://github.com/ThibaultLatrille/PhD/tree/master/MutationSelectionDrift**
+
 ---
 
 This repository is meant to provide the necessary scripts to reproduce the figures shown in the manuscript, using _BayesCode_ [v1.0](https://github.com/ThibaultLatrille/bayescode/releases/tag/v1.0).
