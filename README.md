@@ -2,18 +2,18 @@
 **Inferring long-term effective population size with mutation–selection models**\
 Thibault Latrille, Vincent Lanore, Nicolas Lartillot,\
 _Molecular Biology and Evolution_, Volume 38, Issue 10, October 2021, Pages 4573–4587,\
-https://doi.org/10.1093/molbev/msab160 
+[doi.org/10.1093/molbev/msab160](https://doi.org/10.1093/molbev/msab160)
 
-**Compiled binaries and instructions for BayesCode are available at https://github.com/ThibaultLatrille/bayescode**
+**Compiled binaries and instructions for BayesCode are available at [github.com/ThibaultLatrille/bayescode](https://github.com/ThibaultLatrille/bayescode)**
 
-**LaTeX for the manuscript and figures are available at https://github.com/ThibaultLatrille/PhD/tree/master/MutationSelectionDrift**
+**LaTeX for the manuscript and figures are available at [github.com/ThibaultLatrille/PhD](https://github.com/ThibaultLatrille/PhD/tree/master/MutationSelectionDrift)**
 
 ---
 
 This repository is meant to provide the necessary scripts to reproduce the figures shown in the manuscript, using _BayesCode_ [v1.0](https://github.com/ThibaultLatrille/bayescode/releases/tag/v1.0).
-The underlying dataset necessary to reproduce the figures shown in the manuscript is available at [https://doi.org/10.6084/m9.figshare.13644110.v1](https://doi.org/10.6084/m9.figshare.13644110.v1). Please see the bash script `analyses_download.sh` to download and extract.
+The underlying dataset necessary to reproduce the figures shown in the manuscript is available at [doi.org/10.6084/m9.figshare.13644110.v1](https://doi.org/10.6084/m9.figshare.13644110.v1). Please see the bash script `analyses_download.sh` to download and extract.
 
-If you wish to use _BayesCode_ on your own dataset to estimate long-term changes in effective population size, please see instructions for how install and run the up-to-date version of _BayesCode_ at https://github.com/ThibaultLatrille/bayescode.
+If you wish to use _BayesCode_ on your own dataset to estimate long-term changes in effective population size, please see instructions for how install and run the up-to-date version of _BayesCode_ at [github.com/ThibaultLatrille/bayescode](https://github.com/ThibaultLatrille/bayescode).
 
 The experiments are meant to run on Linux/Unix/MacOS operating systems.
 The experiments can either run on a local computer or in a cluster configuration (slurm).
@@ -42,7 +42,7 @@ Red pill method is prefered if you plan to extensively use the program and tinke
 The two pills are mutually not exclusive, no overdose had ever been observed (though no statistical study had been performed).
 
 ### 1.a. Blue pill - Docker
-A installation of Docker is required, see https://docs.docker.com/install/.
+A installation of Docker is required, see [docs.docker.com/install/](https://docs.docker.com/install/).
 
 In Ubuntu (>17.10) with snap pre-installed, one can simply install docker with: 
 ```
@@ -91,7 +91,7 @@ To replicate figure 3 of the manuscript on mammalian dataset, open the jupyter n
 
 Instructions can be found in the jupyter notebook [ReplicateExperiments.ipynb](https://github.com/ThibaultLatrille/MutationSelectionDrift/blob/master/DataEmpirical/ReplicateExperiments.ipynb) in the sub-folder *DataEmpirical*.
 
-This repository gives the tools to produce your own experiment on your dataset, given you have at least a DNA alignment file and an associated rooted tree topology (branch lengths are not required). However, we recommend to you use the latest version of [BayesCode](https://github.com/ThibaultLatrille/bayescode) to run experiments on your own files instead.
+This repository gives the tools to produce your own experiment on your dataset, given you have at least a DNA alignment file and an associated rooted tree topology (branch lengths are not required). However, we recommend to you use the latest version of [github.com/ThibaultLatrille/bayescode](https://github.com/ThibaultLatrille/bayescode) to run experiments on your own files instead.
 
 ## 4. Add features or debug in the python scripts
 You made modifications to one of the python script, a notebook, this README.md, or you added new features.
@@ -103,8 +103,8 @@ You made modifications to the C++ code of either the inference framework *BayesC
 You wish this changes benefit to all users of these software?
 
 Please, feel free to open pull-requests in their respective GitHub repository:
-* https://github.com/ThibaultLatrille/SimuEvol 
-* https://github.com/ThibaultLatrille/bayescode
+* [github.com/ThibaultLatrille/SimuEvo](https://github.com/ThibaultLatrille/SimuEvol) 
+* [github.com/ThibaultLatrille/bayescode](https://github.com/ThibaultLatrille/bayescode)
 
 ## Licence
 
